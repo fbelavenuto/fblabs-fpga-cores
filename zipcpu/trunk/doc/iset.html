@@ -1,0 +1,761 @@
+<HTML><HEAD><TITLE>Zip CPU Instruction Set</TITLE></HEAD><BODY>
+<H1 align=center>Zip CPU News</H1>
+<P>The new Instruction Set is now available for the Zip CPU.  Please see the
+Instruction set page for details.
+<H1 align=center>New Instruction Set</H1>
+<P>The Zip CPU Instruction set has been entirely redesigned and rebuilt.  
+As a result,  OpCodes are now 5-bits, instead of four, and there are several
+new instructions.  The instruction set also offers compact instructions,
+sometimes (erroneously) called VLIW instructions, that stuff two instructions
+into one word.  (They aren't true VLIW instructions, since each sub-instruction
+still requires its own clock cycle to execute.)  This new instruction set was
+designed to be compatible at the assembly language level, simpler to decode,
+and to offer a space for divide and floating point instructions.  The cost
+of this new instruction set is a loss of 1-2 bits of capability in the
+immediate offset range of each instruction.  New instructions include six
+floating point instructions (for when I have a floating point unit), two
+divide instructions (signed and unsigned), a population count (counts the
+number of 1's bits), a bit reversal instruction, and a unique bus lock
+instruction that can be used to create an atomic test and set capability to
+support multiprocessor settings.
+<H1 align=center>Zip CPU Goals</H1>
+<P>The original goal of the ZIP CPU was to be a very simple CPU.   You might
+	think of it as a poor man's alternative to the OpenRISC architecture.
+	For this reason, all instructions have been designed to be as simple
+	as possible, they all work on 32--bit operands, and all of the ALU
+	instructions are designed to be executed in one instruction cycle per
+	instruction, barring pipeline stalls.  This has resulted in the choice
+	to drop push and pop instructions, pre-increment and post-decrement
+	addressing modes, and more.
+<P>For those who like buzz words, the Zip CPU is:
+<UL>
+	<LI>A 32-bit CPU: All registers are 32-bits, addresses are 32-bits,
+		instructions are 32-bits wide, etc.
+	<LI>A RISC CPU.  There is no microcode for executing instructions.
+	<LI>A Load/Store architecture.  (Only load and store instructions
+		can access memory.)
+	<LI>Wishbone compliant.  All peripherals are accessed just like
+		memory across this bus.
+	<LI>A Von-Neumann architecture.  (The instructions and data share a 
+		common bus.)
+	<LI>A pipelined architecture, having stages for <B>Prefetch</B>,
+		<B>Decode</B>, <B>Read-Operand</B>, <B>Execute</B>,
+		and <B>Write-back</B>.  The <B>Execute</B> stage is implemented
+		by one of four blocks: an arithmetic/logic unit, a memory
+		unit, a divide coprocessor and a floating point coprocessor
+		(once completed).
+</UL>
+
+<P>Now, however, that I've worked on the Zip CPU for a while, it is not nearly
+as simple as I originally hoped.  Worse, I've had to adjust to create
+capabilities that I was never expecting to need.  These include:
+<UL>
+	<LI><B>Extenal Debug:</B> Once I placed this within an FPGA, I needed
+	a means of debugging this CPU.  That means that there needs to be an
+	external register that can control the CPU: reset it, halt it, step
+	it, and tell
+	whether it is running or not.  Another register is placed similar to
+	this register, to allow the external controller to examine registers
+	internal to the CPU.</P>
+	<LI><B>Internal Debug:</B> Being able to run a debugger from within
+	a user process requires an ability to step a user process from
+	within a debugger.  It also requires a break instruction that can
+	be substituted for any other instruction, and substituted back.
+	The break is actually difficult: the break instruction cannot be
+	allowed to execute.  That way, upon a break, the debugger should
+	be able to jump back into the user process to step the instruction
+	that would've been at the break point initially, and then to 
+	replace the break after passing it.</P>
+
+	<LI><B>Prefetch Cache:</B> My original implementation had a very
+	simple prefetch stage.  Any time the PC changed the prefetch would go
+	and fetch the new instruction.  This prefetch is still available,
+	should you wish to conserve as much logic as possible.
+
+	<P>While this single instruction prefetch was perhaps this simplest
+	approach, it cost roughly five clocks for every instruction.  This
+	was deemed unacceptable, as I wanted a CPU that could execute
+	instructions in one cycle.  I therefore have a prefetch cache that
+	issues pipelined wishbone accesses to memory and then pushes
+	instructions at the CPU.  This cache is rather unique in that it 
+	maintains an arbitrary window into memory where it is active.  That
+	window can be anywhere.  It's also unique in that it requires two
+	pipeline clocks, not one, for any access.  This makes it both prone to 
+	both cache misses, as well as slower to respond to any branch
+	instruction.</P>
+
+	<P>Eventually, this was deemed insufficient, and a new cache was built.
+	This newer cache requires only one clock cycle for (just about) any
+	access within the cache, reducing branch delay times to a single cycle
+	stall for non-conditional branches.
+	</P>
+
+	<LI><B>Operating System:</B>In order to support an operating system,
+	interrupts and so forth, the CPU needs to support supervisor and
+	user modes, as well as a means of switching between them.  For example,
+	the user needs a means of executing a system call.  This is the 
+	purpose of the <B>'trap'</B> instruction.  This instruction needs to
+	place the CPU into supervisor mode (here equivalent to disabling
+	interrupts), as well as handing it a parameter such as identifying
+	which O/S function was called. 
+
+	<P>Modern timesharing systems also depend upon a <B>Timer</B> interrupt
+	to handle task swapping.  For the Zip CPU, this interrupt is handled
+	external to the CPU as part of the CPU System, found in
+	<tt>zipsystem.v</tt>.  The timer module itself is found in
+	<tt>ziptimer.v</tt>.
+
+	<LI><B>Pipeline Stalls:</B> My original plan was to not support pipeline
+	stalls at all, but rather to require the compiler to properly schedule
+	instructions so that stalls would never be necessary.  After trying
+	to build such an architecture, I gave up, having learned some things:
+
+	<P>For example, in order to facilitate interrupt handling and debug
+	stepping, the CPU needs to know what instructions have finished, and
+	which have not.  In other words, it needs to know where it can restart
+	the pipeline from.  Once restarted, a task must be able to imagine
+	that it had never stopped.
+
+	<P>So I switched to a model of discrete execution: Once an instruction
+	enters into either the ALU or memory unit, the instruction is
+	guaranteed to complete.  If the logic recognizes a branch or a 
+	condition that would render the instruction entering into this stage
+	possibly inappropriate (i.e. a conditional branch preceeding a store
+	instruction for example), then the pipeline stalls for one cycle
+	until the conditional branch completes.  Then, if it generates a new
+	PC address, the stages preceeding are all wiped clean.
+
+	<P>The discrete execution model allows such things as sleeping: if the
+	CPU is put to "sleep", the ALU and memory stages stall and back up
+	everything before them.  Likewise, anything that has entered the ALU
+	or memory stage when the CPU is placed to sleep continues to completion.	
+	<P>To handle this logic, each pipeline stage has three control signals:
+	a valid signal, a stall signal, and a clock enable signal.  In
+	general, a stage stalls if it's contents are valid and the next step
+	is stalled.  This allows the pipeline to fill any time a later stage
+	stalls.
+
+</UL>
+
+With that introduction out of the way, let's move on to the instruction
+set.
+
+<H1 align=center>Zip CPU Instruction Set</H1>
+As an overview, the Zip CPU supports a set of two operand instructions, where
+the first operand (always a register) is the result.  The only exception is
+the store instruction, where the first operand (always a register) is the
+source of the data to be stored.  The second operand may either be a register,
+or a register plus an immediate.
+<P>Second, the Zip CPU supports two operating modes: a supervisor mode where
+interrupts are disabled, and a user mode where they are enabled.  The CPU
+switches modes upon any interrupt (there are no interrupt vectors), and can
+also switch modes upon request from either user or supervisor.
+<P>Now for the details.
+<H2>Register Set</H2>
+The Zip CPU supports two sets of sixteen 32-bit registers, a supervisor
+and a user set.  The supervisor set is used in interrupt mode, whereas
+the user set is used otherwise.  Of this register set, the Program Counter (PC)
+is register 15, whereas the status register (SR) or condition code register
+(CC) is register 14.  By convention, the stack pointer will be register 13 and
+noted as (SP)--although the instruction set allows it to be anything.
+Likewise, for linking purposes, register 12 is reserved for a Global Offset
+Table, and noted as (GBL), even though from the CPU's perspective there's
+nothing special about this register either.
+The CPU can access both register sets via move instructions from the
+supervisor state, whereas the user state can only access the user registers.
+
+<P>The status register is special, and bears further mention.  The lower
+8 bits of the status register form a set of condition codes.  Writes to other
+bits are preserved, and can be used as part of the trap architecture--examined
+by the O/S upon any interrupt, cleared before returning. 
+<P>Of the eight condition codes, the bottom four are the current flags:
+		Zero (Z),
+		Carry (C),
+		Negative (N),
+		and Overflow (V).
+For those instructions that set flags, these flags will be set based upon
+the result of the instruction.  
+
+<P>The next bit is a sleep bit.  Writing a 1 to this bit will put the
+	CPU to sleep.  Setting this bit will cause the CPU to
+	wait for an interrupt (if interrupts are enabled), or to
+	completely halt (if interrupts are disabled).  (Only the supervisor
+	can halt the CPU, even though the user can put the CPU to sleep
+	or switch to supervisor mode).
+<P>The sixth bit is a global interrupt enable bit (GIE).  When this
+	sixth bit is a '1' interrupts will be enabled, else disabled.  When 
+	interrupts are disabled, the CPU will be in supervisor mode, otherwise
+	it is in user mode.  Thus, to execute a context switch, one only
+	need enable or disable interrupts.  (When an interrupt line goes
+	high, interrupts will automatically be disabled, as the CPU switches
+	to supervisor mode.)
+<P>The seventh bit is a step bit.  This bit can be
+	set from supervisor mode only.  After setting this bit, should
+	the supervisor mode process switch to user mode, it would then 
+	accomplish one instruction in user mode before returning to supervisor
+	mode.  (Two instructions, if they are packed.)  Then, upon return to
+	supervisor mode, this bit will be automatically cleared.  This bit has
+	no effect on the CPU while in supervisor mode.
+	<P>This functionality was added to enable a userspace debugger
+	functionality on a user process, working through supervisor mode
+	of course.
+<P>The eighth bit is a break enable bit.  This
+	controls whether a break instruction will halt the processor for an
+	external debugger (break enabled), or whether the break instruction
+	will simply send send the CPU into supervisory mode.
+	This bit can only be set/changed in supervisor mode.
+	<P>This functionality was added to enable an external debugger to
+	set and manage breakpoints.
+<P>The ninth bit is an illegal instruction bit.  Should the CPU ever try to 
+	execute an illegal instruction, or an instruction from an address that
+	causes a bus error, this bit will be set in the user CC
+	register, and the CPU will switch to supervisor mode.  It will be
+	automatically cleared upon any return from interrupt.  If the CPU is
+	already in supervisor mode, the CPU will halt.  The bit can then be
+	cleared by either the debugger, or a CPU reset.
+<P>The tenth bit is a bus error indication bit.  Should a memory load or store
+	operation fail
+	due to a bus error, the CPU will switch to supervisor mode and set this
+	bit in the user CC register.  The bit is automatically cleared upon
+	any return from interrupt.  If, however, the CPU was in supervisor mode,
+	than a supervisor bus error bit is set and the CPU will halt.  This
+	bit will remain set until either it is unset by a debugger, or the
+	CPU is reset.
+<P>The next two bits are for divide by zero exceptions and floating point	
+	exceptions.  These will be set upon any user task exception (of this
+	type), and the CPU will switch to supervisor mode.  If an exception
+	occurrs in supervisor mode, the CPU will simply halt.
+<P>The status register bits are shown below:
+<TABLE border>
+<TR><TH>12</TH><TH>11</TH><TH>10</TH><TH>9</TH><TH>8</TH><TH>7</TH><TH>6</TH><TH>5</TH><TH>4</TH> <TH>3</TH> <TH>2</TH> <TH>1</TH> <TH>0</TH></TR>
+<TR><TD>FPE</TD><TD>DIVE</TD><TD>BUSERR</TD><TD>TRAP</TD><TD>ILL</TD><TD>BREAKEN</TD><TD>STEP</TD><TD>GIE</TD><TD>SLEEP</TD><TD>V</TD><TD>N</TD><TD>C</TD> <TD>Z</TD></TR>
+</TABLE>
+<H2>Conditions</H2>
+Most, although not quite all, instructions are conditional.  From the four
+condition code flags, eight conditions are defined.  These are:
+<TABLE>
+<TR><TH>Code</TH><TH>Mneumonic</TH><TH>Condition</TH></TR>
+<TR><TD>3'h0</TD><TD>(None)</TD><TD>Always</TD></TR>
+<TR><TD>3'h1</TD><TD>.LT</TD><TD>Less than (N set)</TD></TR>
+<TR><TD>3'h2</TD><TD>.Z</TD><TD>Equal (Zero set)</TD></TR>
+<TR><TD>3'h3</TD><TD>.NZ</TD><TD>Not equal to (!Z)</TD></TR>
+<TR><TD>3'h4</TD><TD>.GT</TD><TD>Greater than (N not set, Z not set)</TD></TR>
+<TR><TD>3'h5</TD><TD>.GE</TD><TD>Greater than or equal (N not set, Z irrelevant)</TD></TR>
+<TR><TD>3'h6</TD><TD>.C</TD><TD>Carry set</TD></TR>
+<TR><TD>3'h7</TD><TD>.V</TD><TD>Overflow set</TD></TR>
+</TABLE>
+There is no condition code for less than or equal, not C or not V.  Conditioning
+an instruction on one of these non-existant conditions requires either
+an extra instruction, such as TST $4,CC; STO.NZ R0,(R1), or it may require 
+reversing the comparison.
+
+<P>Conditions in the Zip CPU instruction set may also be stacked: any compare
+or test instruction that executes will always set the flags, regardless of the
+previous flag condition.  No other conditionally executed instructions will
+set the flags.  This allows for the creation of a multicycle compare
+instruction, as in 
+<UL>
+<TT>CMP '$',R0<BR>
+	CMP.Z 'G',R1<BR>
+	CMP.Z 'P',R2<BR>
+	BNZ failedmatch</TT></UL>
+
+<H2>Operand B</H2>
+Many instruction forms have a 19-bit source "Operand B" associated with them.  
+This Operand B is either equal to a register plus a signed immediate offset,
+or an immediate offset by itself.  This value is encoded as,
+<TABLE border>
+<TR><TH>18</TH><TH>17</TH><TH>16</TH>
+	<TH>15</TH><TH>14</TH><TH>13</TH><TH>12</TH>
+	<TH>11</TH><TH>10</TH><TH>9</TH><TH>8</TH>
+	<TH>7</TH><TH>6</TH><TH>5</TH><TH>4</TH>
+	<TH>3</TH><TH>2</TH><TH>1</TH><TH>0</TH></TR>
+<TR><TD>1'b0</TD><TD colspan=18>Signed Immediate Value</TD></TR>
+<TR><TD>1'b1</TD><TD colspan=4>Register</TD><TD colspan=14>Signed immediate offset</TR>
+</TABLE>
+<H2>Address Mode(s)</H2>
+The ZIP CPU supports two addressing modes: register plus immediate, and
+immediate address.  Addresses are therefore encoded in the same fashion as
+Operand B's, shown above.
+
+<P>The Zip CPU has no support for indexed addressing whereby the sum of
+two registers creates a memory address, nor does it have any support for
+pre/post increment or decrement addressing modes.
+
+<H2>Move Operands</H2>
+<P>The previous set of operands would be perfect and complete, save only that
+	the CPU needs access to non--supervisory registers while in supervisory
+	mode.  Therefore, the MOV instruction is special and offers access
+	to these registers ... when in supervisory mode.  To keep the compiler
+	simple, the extra bits are ignored in non-supervisory mode (as though
+	they didn't exist), rather than being mapped to new instructions or
+	additional capabilities.  The bits indicating which register set each
+	register lies within are the A-Usr and B-Usr bits.  Further, because
+	a load immediate instruction exists, there is no move capability between
+	an immediate and a register: all moves come from either a register or
+	a register plus an offset.
+<P>This actually leads to a bit of a problem: since the MOV instruction
+	encodes which register set each register is coming from or moving to,
+	how shall a compiler or assembler know how to compile a MOV instruction
+	without knowing the mode of the CPU at the time?  For this reason,
+	the compiler will assume all MOV registers are from the current
+	register set, encoded as the supervisor register set, yet displayed
+	normally.  Anything with the user bit set will
+	be treated as a user register.  The CPU will then quietly ignore the 
+	supervisor bits while in user mode, and anything marked as a user
+	register will always be valid.
+<H2>Native Instructions</H2>
+The Zip CPU instruction set has one of two basic formats, with a small
+number of exceptions.  These formats are shown below:
+<TABLE border align=center>
+<TR><TH rowspan=2>Op Code</TH><TH colspan=8>31..24</TH>
+			<TH colspan=8>23..16</TH>
+			<TH colspan=8>15..8</TH>
+			<TH colspan=8>7..0</TH></TR>
+<TR><!-- Opcode -->
+	<TD>&nbsp;</TD><TD>&nbsp;</TD><TD>&nbsp;</TD><TD>&nbsp;</TD>
+	<TD>&nbsp;</TD><TD>&nbsp;</TD><TD>&nbsp;</TD><TD>&nbsp;</TD>
+	<!-- -->
+	<TD>&nbsp;</TD><TD>&nbsp;</TD><TD>&nbsp;</TD><TD>&nbsp;</TD>
+	<TD>&nbsp;</TD><TD>&nbsp;</TD><TD>&nbsp;</TD><TD>&nbsp;</TD>
+	<!-- -->
+	<TD>&nbsp;</TD><TD>&nbsp;</TD><TD>&nbsp;</TD><TD>&nbsp;</TD>
+	<TD>&nbsp;</TD><TD>&nbsp;</TD><TD>&nbsp;</TD><TD>&nbsp;</TD>
+	<!-- -->
+	<TD>&nbsp;</TD><TD>&nbsp;</TD><TD>&nbsp;</TD><TD>&nbsp;</TD>
+	<TD>&nbsp;</TD><TD>&nbsp;</TD><TD>&nbsp;</TD><TD>&nbsp;</TD>
+	<!-- Sets CC -->
+	</TR>
+<TR><TD rowspan=2>Standard</TD><TD rowspan=4>0</TD>
+	<TD rowspan=4 colspan=4>DR</TD>
+	<TD rowspan=2 colspan=5>OpCode</TD>
+	<TD rowspan=3 colspan=3>CND</TD>
+	<TD>0</TD><TD colspan=18>18-bit signed immediate</TD></TR>
+<TR><TD>1</TD><TD colspan=4>BR</TD><TD colspan=14>14-bit signed immediate</TD></TR>
+<TR><TD>MOV</TD><TD colspan=5>5'hf</TD><TD>A</TD>
+	<TD colspan=4>BR</TD><TD>B</TD>
+	<TD colspan=13>13-bit signed immediate</TD></TR>
+<TR><TD>LDI</TD><TD colspan=4>4'hb</TD><TD colspan=23>23-bit signed immediate</TD></TR>
+<TR><TD rowspan=6>VLIW</TD><TD rowspan=6>1</TD>
+	<TD rowspan=3 colspan=4>DR</TD><TD rowspan=2 colspan=5>OpCode</TD>
+	<TD rowspan=6 colspan=3>VCND</TD>
+	<TD colspan=1>0</TD>
+	<TD colspan=4>Imm</TD><TD rowspan=3 colspan=14>&nbsp;</TD></TR>
+<TR><TD colspan=1>1</TD><TD colspan=4>BR</TD></TR>
+<TR><TD colspan=4>4'hb</TD><TD>&nbsp;</TD><TD colspan=5>Imm</TD></TR>
+<TR><TD rowspan=3 colspan=9>&nbsp;</TD><TD rowspan=3 colspan=5>&nbsp;</TD>
+	<TD rowspan=3 colspan=4>DR</TD><TD rowspan=2 colspan=5>OpCode</TD>
+	<TD>0</TD><TD colspan=4>Imm</TD></TR>
+<TR><TD>1</TD><TD colspan=4>BR</TD></TR>
+<TR><TD colspan=4>4'hb</TD><TD>&nbsp;</TD><TD colspan=5>Imm</TD></TR>
+</TABLE>
+In this chart, 'DR' is the destination register of the instruction (or source,
+in the case of a store instruction), and BR is the other register.
+
+<P>In this format, the Standard line is the basic format for all 32--bit
+instructions.  The two exceptions are the move instruction, which needs space
+to encode whether registers are user or supervisor registers (marked here as
+the A and B bits), and the load immediate instruction which has been stripped
+down so that as many bits as possible may  be used to describe the immediate
+value.
+
+<P>As of this (hopefully the last) version of the instruction set, the instruction set now supports
+a compact format as well.  This is the VLIW format.  Using this format, two
+instructions may be encoded in a single instruction word, with the instruction
+encoded in the higher order bits being the "first" instruction.  The three
+bit condition is then modified such that the first bit specifies whether
+or not the condition is to be applied to the second instruction, and the
+second two bits specify the low order two bits of the condition.  Hence a 
+3'h1 would specify that the first instruction is to be executed on a less
+than condition, whereas the second instruction will always be executed.
+Likewise a 3'h7 condition would mean that both first and second instructions
+will be executed if the zero flag is not set.  Other than the loss of any
+potential immediate address space, these instructions are identical to the
+first set.
+
+<P>The instruction set now has the space for 32-opcodes.  These are defined
+as follows:
+
+<TABLE border align=center>
+<TR><TH>OpCode</TH><TH colspan=2 align=center>Instruction</TH><TH>Sets CC</TH>
+	</TR>
+<TR><TD>5'h00</TD><TD>SUB</TD><TD>Subtract operand B from DR, result into DR</TD><TD rowspan=8>Y</TD></TR>
+<TR><TD>5'h01</TD><TD>AND</TD><TD>Bitwise AND</TD></TR>
+<TR><TD>5'h02</TD><TD>ADD</TD><TD>Add two numbers</TD></TR>
+<TR><TD>5'h03</TD><TD>OR</TD><TD>Bitwise OR</TD></TR>
+<TR><TD>5'h04</TD><TD>XOR</TD><TD>Exclusive OR</TD></TR>
+<TR><TD>5'h05</TD><TD>LSR</TD><TD>Logical shift DR right by OpB bits</TD></TR>
+<TR><TD>5'h06</TD><TD>LSL</TD><TD>Logical shift DR left by OpB bits</TD></TR>
+<TR><TD>5'h07</TD><TD>ASR</TD><TD>Arithmetic shift right</TD></TR>
+<TR><TD>5'h08</TD><TD>LDIHI</TD><TD>Load into upper 16 bits</TD><TD rowspan=2>N</TD></TR>
+<TR><TD>5'h09</TD><TD>LDILO</TD><TD>Load into lower 16 bits</TD></TR>
+<TR><TD>5'h0a</TD><TD>MPYU</TD><TD>16-bit multiply, unsigned</TD><TD rowspan=5>Y</TD></TR>
+<TR><TD>5'h0b</TD><TD>MPYS</TD><TD>16-bit multiply, signed</TD></TR>
+<TR><TD>5'h0c</TD><TD>BREV</TD><TD>Bit reverse OpB into DR</TD></TR>
+<TR><TD>5'h0d</TD><TD>POPC</TD><TD>Population Count of OpB into DR</TD></TR>
+<TR><TD>5'h0e</TD><TD>ROL</TD><TD>Rotate left DR by OpB bits</TD></TR>
+<TR><TD>5'h0f</TD><TD>MOV</TD><TD>Move register</TD><TD>N</TD></TR>
+<TR><TD>5'h10</TD><TD>CMP</TD><TD>Compare (SUB, w/o setting result)</TD><TD rowspan=2>Y</TD></TR>
+<TR><TD>5'h11</TD><TD>TST</TD><TD>Test (AND w/o setting result)</TD></TR>
+<TR><TD>5'h12</TD><TD>LOD</TD><TD>Load DR from memory address in OpB</TD><TD rowspan=2>N</TD></TR>
+<TR><TD>5'h13</TD><TD>STO</TD><TD>Store DR into memory at address OpB</TD></TR>
+<TR><TD>5'h14</TD><TD>DIVU</TD><TD>Divide, unsigned, DR by OpB</TD><TD rowspan=2>Y</TD></TR>
+<TR><TD>5'h15</TD><TD>DIVS</TD><TD>Divide, signed</TD></TR>
+<TR><TD>5'h16/7</TD><TD>LDI</TD><TD>Load Immediate into DR</TD><TD>N</TD></TR>
+<TR><TD>5'h18</TD><TD>FPADD</TD><TD>Floating point add</TD><TD rowspan=6>Y</TD></TR>
+<TR><TD>5'h19</TD><TD>FPSUB</TD><TD>Floating point subtract</TD></TR>
+<TR><TD>5'h1a</TD><TD>FPMPY</TD><TD>Floating point multiply</TD></TR>
+<TR><TD>5'h1b</TD><TD>FPDIV</TD><TD>Floating point divide</TD></TR>
+<TR><TD>5'h1c</TD><TD>FPCVT</TD><TD>Convert integer to floating point</TD></TR>
+<TR><TD>5'h1d</TD><TD>FPINT</TD><TD>Convert floating point to integer</TD></TR>
+<TR><TD>5'h1e</TD><TD rowspan=2 colspan=3 align=center><em>Reserved for future use</em></TD></TR>
+<TR><TD>5'h1f</TD></TR>
+</TABLE>
+This leaves three instructions left: NOOP, BREAK, and LOCK.  These have opcodes
+of <TT>5'h18</TT>, <TT>5'h19</TT>, and <TT>5'h1a</TT> respectively.  They
+are carved out of the floating point units opcodes, and differentiated by the
+fact that their resulting register is either the CC or PC register.  (It never
+made sense to do a floating point instruction into the CC or PC register 
+anyway ...)  The BREAK instruction is designed to trap the CPU without ever
+entering into the ALU.  It is useful for debugging purposes.  The LOCK
+instruction waits the decode and prefetch pipeline stages to fill with memory
+instructions before locking the bus and letting these memory operations
+complete.  It is designed to support a test and set operation.  (Actually,
+since the Zip CPU doesn't truly support a LOCK bit on the wishbone bus, what
+really happens is that the CYC line is kept high throughout the operation.
+This line may be tied to a LOCK line if you would like to use the Zip CPU
+with a bus that supports LOCKing.)
+
+<H2>Derived Instructions</H2>
+<TABLE border>
+<TR><TH>Mapped</TH><TH>Actual</TH><TH WIDTH=65%>Notes</TH></TR>
+<TR><TD valign=top>ABS Rx</TD><TD>TST -1,Rx<BR>NEG.LT Rx</TD><TD>Absolute
+	value, depends upon the derived NEG instruction below.</TD></TR>
+<TR><TD valign=top>ADD Ra,Rx<BR>
+	ADDC Rb,Ry</TD><TD valign=top>ADD Ra,Rx<BR>ADD.C $1,Ry<BR>ADD Rb,Ry</TD><TD valign=top>Add with carry</TD></TR>
+<TR><TD valign=top rowspan=3>BRA.cond +/-$Addr</TD><TD>
+	MOV.cond $Addr+PC,PC</TD><TD>Branch/jump on condition.  Works for 14 bit address offsets.</TD></TR>
+<TR><TD>ADD.cond $Addr,PC<TD>Branch/jump on condition that works for 18-bit
+	offsets, although it does set the flags.</TD></TR>
+<TR><TD>LDI $Addr,Rx<BR>
+	ADD.cond Rx,PC</TD><TD>Branch/jump on condition.  Works for
+	23 bit address offsets, but costs a register and an extra one (or
+	two) instruction(s).</TD></TR>
+<TR><TD valign=top>BNC PC+$Addr</TD><TD>
+	TEST $Carry,CC<BR>
+	MOV.Z PC+$addr,PC</TD>
+	<TD>Example of a branch on an unsupported
+		condition, in this case a branch on not carry</TD></TR>
+<TR><TD valign=top>CLRF.NZ Rx</TD><TD>XOR.NZ Rx,Rx</TD><TD>Clear Rx, and flags, if the Z-bit is not set</TD></TR>
+<TR><TD valign=top>CLR Rx</TD><TD>LDI $0,Rx</TD><TD>Clears Rx, leaves flags untouched.  This instruction cannot be conditional.</TD></TR>
+<TR><TD valign=top>EXCH.W Rx</TD><TD>ROL $16,Rx</TD><TD valign=top>Exchanges the top and bottom 16'bit words of Rx</TD></TR>
+<TR><TD valign=top>HALT</TD><TD>Or $SLEEP,CC</TD><TD valign=top>Executed while in interrupt mode.  In user mode this is simply a wait until interrupt instructioon.</TD></TR>
+<TR><TD valign=top>INT</TD><TD>LDI $0,CC</TD><TD>Since we're using
+	the CC register as a trap vector as well, this executes
+	TRAP #0.</TD></TR>
+<TR><TD valign=top>IRET</TD><TD>OR $GIE,CC</TD><TD>Also an RTU instruction
+	(Return to Userspace)</TD></TR>
+<TR><TD valign=top>JMP R6+$Addr</TD><TD>MOV $Addr(R6),PC</TD><TD>&nbsp;</TD></TR>
+<TR><TD valign=top>LJMP $Addr</TD><TD>LOD (PC),PC<BR><EM>$Address</em></TD><TD>
+		Although this only works for an unconditional jump, and it only
+		works in a Von-Neumann architecture, this instruction
+		combination makes for a nice combination that can be adjusted
+		by a linker at a later time.</TD></TR>
+<TR><TD valign=top>JSR PC+$Addr</TD><TD>MOV $2+PC,R12<BR>MOV $addr+PC,PC</TD>
+	<TD>Jump to subroutine.
+	Note that this high speed version of a JSR call needs a register to
+	hold the last PC address.  In its favor, it doesn't suffer the mandatory
+	memory access of the more traditional approach.</TD></TR>
+<TR><TD valign=top>LDI.l $val,Rx</TD><TD>
+	LDIHI HIBITS($val),Rx<BR>
+	LDILO LOBITS($val),Rx</TD><TD>Sadly, there's not enough instruction
+		space to load a complete immediate value into any register.
+		Therefore, fully loading any register takes two cycles.
+		The LDIHI (load immediate high) and LDILO (load immediate low)
+		instructions have been created to facilitate this.
+		Further, the assembler will quietly turn any LDI #x,Rx
+		instruction into this instruction if either #x doesn't fit
+		within the 23--bit immediate operand field, or if the
+		instruction is conditional.</TD></TR>
+<TR><TD valign=top>LOD.b $addr,Rx</TD><TD>
+	LDI	$addr,Ra<BR>
+	LDI	$addr,Rb<BR>
+	LSR	$2,Ra<BR>
+	AND	$3,Rb<BR>
+	LOD	(Ra),Rx<BR>
+	LSL	$3,Rb<BR>
+	SUB	$32,Rb<BR>
+	ROL	Rb,Rx<BR>
+	AND $0ffh,Rx</TD><TD>This CPU is designed for 32'bit word
+	length instructions.  Byte addressing is not supported by the CPU or
+	the bus, so it therefore takes more work to do.<P>Note that in
+	this example, $Addr is a byte-wise address, where all other addresses
+	are 32-bit wordlength addresses.  For this reason, we needed to 
+	drop the bottom two bits.  This also limits the address space
+	of character accesses from 16 MB down to 4MB.</TD></TR>
+<TR><TD valign=top>LSL $1,Rx<BR>LSLC $1,Ry</TD>
+	<TD>LSL $1,Ry<BR>
+	LSL $1,Rx<BR>
+	OR.C $1,Ry</TD><TD>Logical shift left with carry.  Note that the
+	instruction order is now backwards, to keep the conditions valid.
+	That is, LSL sets the carry flag, so if we did this the othe way
+	with Rx before Ry, then the condition flag wouldn't have been right
+	for an OR correction at the end.</TD></TR>
+<TR><TD valign=top>LSR $1,Rx<BR>LSRC $1,Ry</TD><TD>
+	CLR Rz<BR>
+	LSR $1,Ry<BR>
+	LDIHI.C $8000h,Rz<BR>
+	LSR $1,Rx<BR>
+	OR Rz,Rx</TD><TD>Logical shift right with carry</TD></TR>
+<TR><TD valign=top>NEG.C Rx</TD><TD>XOR.C $-1,Rx<BR>ADD.C $1,Rx</TD><TD>Negate, may be conditional</TD></TR>
+<TR><TD valign=top>NOOP</TD><TD>NOOP</TD><TD>While there are many
+	operations that do nothing, such as MOV Rx,Rx, or OR $0,Rx, these
+	operations have consequences in that they might stall the bus if
+	Rx isn't ready yet.  For this reason, we have a dedicated NOOP
+	instruction.</TD></TR>
+<TR><TD valign=top>NOT Rx</TD><TD>XOR $-1,Rx</TD><TD>&nbsp;</TD></TR>
+<TR><TD valign=top>POP Rx</TD><TD>LOD (SP),Rx<BR>ADD $1,SP</TD>
+	<TD rowspan=2>Note
+	that for pipelining purposes, it helps to coalesce all the ADD (SUB)
+	operations into one after (before) a group of LOD (STO) instructions,
+	and then to do the operations in sequential order.  This will guarantee
+	a pipelined memory operation.</TD></TR>
+<TR><TD valign=top>PUSH Rx</TD><TD>
+	SUB 1,SP<BR>
+	STO Rx,(SP)</TD></TR>
+<TR><TD valign=top>RESET</TD><TD>LDI 1,R0<BR>STO R0,$watchdog(R12)<BR>NOOP<BR>NOOP</TD><TD>
+	This depends upon the peripheral base address already being in R12.
+	<P>Another opportunity might be to jump to the reset address from
+	within supervisor mode.
+	</TD></TR>
+<TR><TD valign=top>RET</TD><TD>MOV R12,PC</TD><TD>
+	Recall that the JSR command left the address to return to in the
+	register set.  Were that register R12, this returns us back to where
+	we came from.  Unlike the traditional RETN structure of some other
+	architectures, this instruction doesn't suffer a stall on memory
+	read from the stack.</TD></TR>
+<TR><TD valign=top>RTU</TD><TD>OR $GIE,CC</TD><TD>Also known as a Return-To-USER
+		space command, sometimes known as IRET (interrupt return) in
+		other architectures.</TD></TR>
+<TR><TD valign=top>STEP Rr,Rt</TD><TD>LSR $1,Rr<BR>XOR.C Rt,Rr</TD><TD>Step a
+	Galois implementation of a Linear Feedback Shift Register, Rr, using
+	taps Rt</TD></TR>
+<TR><TD valign=top>STO.b Rx,$addr</TD><TD>
+	LDI $addr,Ra<BR>
+	LDI $addr,Rb<BR>
+	LSR $2,Ra<BR>
+	AND $3,Rb<BR>
+	SUB $32,Rb<BR>
+	LOD (Ra),Ry<BR>
+	AND $0ffh,Rx<BR>
+	AND $-0ffh,Ry<BR>
+	ROL Rb,Rx<BR>
+	OR Rx,Ry<BR>
+	STO Ry,(Ra)</TD><TD>This CPU and it's bus are <em>not</em> optimized
+	for byte-wise operations.<P>Note that in this example, $addr is a
+	byte-wise address, whereas in all of our other examples it is a 
+	32-bit word address. This also limits the address space
+	of character accesses from 16 MB down to 4MB.F
+	Further, this instruction implies a byte ordering,
+	such as big or little endian.</TD></TR>
+<TR><TD valign=top>SWAP Rx,Ry</TD><TD>
+	XOR Ry,Rx<BR>
+	XOR Rx,Ry<BR>
+	XOR Ry,Rx</TD><TD>While no extra registers are needed, this example
+	does take 3-clocks.</TD></TR>
+<TR><TD valign=top>TRAP #X</TD><TD valign=top>LDILO $x,R0<BR>AND ~$GIE,CC</TD><TD>
+	This approach uses R0 as a TRAP address.  It works because anytime
+	a user lowers the GIE flag a trap bit is also set within the CC
+	register.  Therefore, upon entering the supervisor state, the CPU only
+	needs to check this bit to know that it got there via a TRAP.  The
+	trap could be made conditional by making the AND conditional.
+	</TD></TR>
+<TR><TD valign=top>TST Rx</TD><TD>TST $-1,Rx</TD><TD valign=top>Set the
+	condition codes based upon Rx.  Could also do a CMP $0,Rx,
+	ADD $0,Rx, SUB $0,Rx, etc, AND $-1,Rx, etc.  The TST and CMP 
+	approaches won't stall future pipeline stages looking for the value
+	of Rx.</TD></TR>
+<TR><TD valign=top>WAIT</TD><TD>Or $SLEEP,CC</TD><TD valign=top>Wait
+	'til interrupt.  In an interrupts disabled context, this becomes a
+	HALT instruction.</TD></TR>
+</TABLE>
+<H2>Pipeline Stages</H2>
+<OL>
+<LI><B>PREFETCH</B>: Read instruction from memory (cache if possible)
+	<UL>
+	<LI>A lack of an instruction, or a waiting memory operation, stalls the
+		pipeline.
+	</UL>
+<LI><B>DECODE</B>: Decode instruction into op code, register(s) to read, and
+	immediate offset.
+	<UL><LI>INPUT: Instruction
+	<LI>OUTPUT: 5-bit register address of result,
+		5-bit register address of an input and usage flag (this
+		register is used), 5-bit register address of second input and
+		usage flag, 32-bit immediate offset.
+	<P><TT>decode(i_clk, (i_ce)&amp;(~stall), i_instr, i_gie, i_pc,
+		o_opcode, o_ccode,
+		o_wr_back, o_wr_reg, o_ra_read, o_ra_reg,
+		o_rb_read, o_rb_reg, 
+		o_immediate,
+		o_memop, o_wr, o_iodec);</TT>
+	<LI>Move instruction gets one decoder, produces two registers addresses,
+		use flag set to one on register B, address A is unused.
+	<LI>Load/Store instructions produce two registers, an immediate, and
+		two flags
+	<LI>Operand B type instructions produce two registers, an immediate,
+		and a use flag
+	<LI>LDI produces one register, a (longer) immediate, and sets the use
+		flag to zero (second register isn't used)
+	<LI>This section never stalls.  On an external stall it simply doesn't update
+		it's outputs.  Outputs are available one clock after
+		the instruction is valid.
+	</UL>
+<LI><b>READ OPERANDS</B>: Read registers and apply any immediate values to them.
+	<UL>
+	<LI>This should stall if a source operand is pending.
+	</UL>
+<LI>Split into two tracks: A) <B>ALU</B> accomplish simple instruction, B) <B>MEMOPS</B> memory read/write.
+	<UL>
+	<LI>Loads stall instructions that access the register until it is
+		written to the register set.
+	<LI>Condition codes are available upon completion
+	<LI>Issuing an instruction to the memory while the memory is busy will
+		stall the bus.  If the bus deadlocks, only a reset will
+		release the CPU.  (Watchdog timer, anyone?)
+	</UL>
+<LI><B>WRITE-BACK</B>: Conditionally write back the result to register set, applying the
+	condition.  This routine is bi-re-entrant.  Either the memory or the
+	simple instruction may request a register write.  Memory writes take
+	priority, stalling the other track.
+	<UL>
+	<LI>This stage will stall the pipeline if both memory and op
+		try to write to the registers at the same time.
+	<LI>
+</OL>
+<H2 align=center>Pipeline Logic</H2>
+How the CPU handles some instruction combinations can be telling when
+determining what happens in the pipeline.  For example:
+<TABLE>
+<TR><TH>Instruction(s)</TH><TH>Issue</TH><TH>Choice</TH></TR>
+<TR><TD valign=top>Delayed Brnaching</TD><TD>What happens in debug mode?
+	That is, what happens when a debugger tries to single step an
+	instruction?  While I can easily single step the computer in either
+	user or supervisor mode from externally, this processor does not appear
+	able to step the CPU in user mode from within user mode--gosh, not even
+	from within supervisor mode--such as if a process had a debugger
+	attached.  As the processor exists, I would have one result stepping
+	the CPU from a debugger, and another stepping it externally.
+	<P>This is unacceptable.
+	</TD></TR>
+<TR><TD valign=top>MOV R0,R1<BR>MOV R1,R2</TD><TD valign=top>What value does
+	R2 get, the value of R1 before the first move or the value of R0?
+	Placing the value of R0 into R1 requires a pipeline stall, and possibly
+	two, as I have the pipeline designed.</TD><TD valign=top>R2 must
+	equal R0 at the end of this operation.  This may stall the pipeline
+	1-2 cycles.</TR>
+<TR><TD valign=top>CMP R0,R1<BR>MOV.EQ $x,PC</TD><TD valign=top>At issue is
+	the same item as above, save that the CMP instruction updates the
+	flags that the MOV instruction depends
+	upon.</TD><TD valign=top>Condition codes must be updated and available
+	immediately for the next instruction without stalling the
+	pipeline.</TD></TR>
+<TR><TD valign=top>CMP R0,R1<BR>MOV CC,R2</TD><TD valign=top>At issue is the
+	fact that the logic supporting the CC register is more complicated than
+	the logic supporting any other register.</TD><TD valign=top>This will
+	create a stall, of 1-2 clock cycles</TD></TR>
+<TR><TD valign=top>ADD $5,R0<BR>BTST $8,CC</TD><TD valign=top>Test for 
+	overflow (or not).  At issue is the load of the condition codes for
+	the BTST instruction, which takes place two clocks before the prior
+	instruction writes it back.</TD><TD valign=top><em>Negotiable for
+	simplified logic.</em>  Let's stall here, 1-2 clocks.</TD></TR>
+<TR><TD valign=top>ADD $x,PC<BR>MOV R0,R1</TD><TD valign=top>Will the
+	instruction following the jump take place before the jump?  In 
+	other words, is the MOV to the PC register handled differently from
+	an ADD to the PC register?</TD><TD valign=top>
+	MOV'es and ADD's use the same logic (simplifies the logic).</TD></TR>
+<TR><TD valign=top>MOV $x,PC<BR>MOV R0,R1</TD><TD valign=top>Will the
+	instruction following the jump take place before the jump?  Or must the
+	pipeline "turn off" any outputs associated with a jump once it 
+	recognizes that the jump has taken place?  Alternatively, the pipeline
+	could stall until the result of the MOV was
+	available.</TD><TD valign=top>
+	<em>Negotiable for simplified logic</em></TD></TR>
+<TR><TD valign=top>MOV $x,PC<BR>MOV R0,R1</TD><TD valign=top>Will the
+	instruction following the jump take place before the jump sometimes
+	but not all times?  Might the pipeline not be full when the jump
+	takes place, and thus the MOV instruction never gets loaded due to a
+	stalled pre-fetch?  Or is the MOV a dependable instruction, guaranteed
+	to be executed (or not) no matter what the JMP does?  Perhaps the
+	compiler is required to insert 2-3 NOOP's following a jump, just
+	to keep the pipeline doing something reliably?
+	</TD><TD valign=top>
+	<em>Negotiable (at present). Highly desired that the behavior
+	is the same regardless of the prefetch speed.</em></TD></TR>
+<TR><TD valign=top>MOV.EQ $x,PC<BR>MOV $y,PC</TD><TD valign=top>Where will
+	instructions take place next?  On a delayed jump instruction, this
+	means that instruction $x will be executed followed by $y, and
+	execution will not continue at $x as
+	desired</TD><TD><em>Negotiable.</em></TD</TR>
+</TABLE>
+<P>As I've studied  this, I find several approaches to handling pipeline 
+	issues.  These approaches (and their consequences) are listed below.
+<TABLE>
+<TR><TH>Condition/Case</TH><TH>Discussion</TH></TR>
+<TR><TD valign=top>All issued instructions complete
+	<BR>Stages stall individually</TD><TD valign=top>What about a
+	slow pre-fetch?  <P>Nominally, this works well: any issued instruction
+	just runs to completion.  If there are four issued instructions in the
+	pipeline, with the writeback instruction being a write-to-PC
+	instruction, the other three instructions naturally finish.
+	<P>This approach fails when reading instructions from the flash,
+	since such reads require N clocks to clocks to complete.  Thus 
+	there may be only one instruction in the pipeline if reading from flash,
+	or a full pipeline if reading from cache.  Each of these approaches
+	would produce a different response.
+	<P>This is unacceptable.</TD></TR>
+<TR><TD valign=top>Issued instructions may be canceled
+	<BR>Stages stall individually</TD><TD valign=top>First problem: 
+	Memory operations cannot be canceled, even reads may have side effects
+	on peripherals that cannot be canceled later.  Further, in the case of
+	an interrupt, it's difficult to know what to cancel.  What happens in
+	a MOV.C $x,PC followed by a MOV $y,PC instruction?  Which get 
+	canceled?<P>Because it isn't clear what would need to be canceled,
+	this is not doable.</TD></TR>
+<TR><TD valign=top>All issued instructions complete.
+	<BR>All stages are filled, or the entire pipeline
+	stalls.</TD><TD valign=top>What about debug control?  What about
+	register writes taking an extra clock stage?  MOV R0,R1; MOV R1,R2
+	should place the value of R0 into R2.  How do you restart the pipeline
+	after an interrupt?  What address do you use?  The last issued
+	instruction?  But the branch delay slots may make that invalid!
+	<P>Reading from the CPU debug port in this case yields inconsistent
+	results: the CPU will halt or step with instructions stuck in the
+	pipeline.  Reading registers will give no indication of what is going
+	on in the pipeline, just the results of completed operations, not of
+	operations that have been started and not yet completed.
+	Perhaps we should just report the state of the CPU based upon what
+	instructions (PC values) have successfully completed?  Thus the
+	debug instruction is the one that will write registers on the next
+	clock.
+	<UL>Suggestion: Suppose we load extra information in the two
+	CC register(s) for debugging intermediate pipeline stages?</UL>
+	<P>The next problem, though, is how to deal with the read operand
+	pipeline stage needing the result from the register pipeline.</TD></TR>
+<TR><TD valign=top>All instructions that enter into the memory module *must*
+	complete.  Issued instructions from the prefetch, decode, or operand
+	read stages may or may not complete.  Jumps into code must be valid,
+	so that interrupt returns may be valid.  All instructions entering the
+	ALU complete.</TD><TD valign=top>This looks to be the simplest approach.
+	While the logic may be difficult, this appears to be the only
+	re-entrant approach.
+
+	<P>A <tt>new_pc</tt> flag will be high anytime the PC changes in an
+	unpredictable way (i.e., it doesn't increment).  This includes jumps
+	as well as interrupts and interrupt returns.  Whenever this flag may
+	go high, memory operations and ALU operations will stall until the
+	result is known.  When the flag does go high, anything in the prefetch,
+	decode, and read-op stage will be invalidated.
+	</TD></TR>
+</TABLE>
+</BODY></HTML>

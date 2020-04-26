@@ -1,0 +1,8 @@
+obj-pc/asmdata.o: asmdata.cpp asmdata.h zopcodes.h zparser.h
+obj-pc/optest.o: optest.cpp zopcodes.h
+obj-pc/twoc.o: twoc.cpp twoc.h
+obj-pc/zdump.o: zdump.cpp zopcodes.h
+obj-pc/zopcodes.o: zopcodes.cpp twoc.h zopcodes.h
+obj-pc/zparser.o: zparser.cpp zparser.h zopcodes.h
+obj-pc/zasm.tab.o: obj-pc/zasm.tab.c asmdata.h zopcodes.h zparser.h
+obj-pc/zpp.o: obj-pc/zpp.cpp

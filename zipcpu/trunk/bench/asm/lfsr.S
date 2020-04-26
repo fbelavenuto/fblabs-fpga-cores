@@ -1,0 +1,11 @@
+loop:
+	LDI	$2408bh,R10
+	LDI	$1,R9
+loop:
+	MOV	R9,R0
+	LSR	$1,R9
+	TST	$1,R0
+	XOR.NE	R10,R9
+	BRA	$-5
+
+	HALT

@@ -1,0 +1,51 @@
+	-- CSYNC detect
+	signal csync_edge_s		: std_logic_vector( 1 downto 0)		:= "00";
+	signal vsync_edge_s		: std_logic_vector( 1 downto 0)		:= "00";
+	signal hsync_edge_s		: std_logic_vector( 1 downto 0)		:= "00";
+	signal hsync_n_s			: std_logic;
+	signal vsync_n_s			: std_logic;
+
+
+	csync_edge_s(0)	<= csync_vdp_n_i;
+
+	-- CSync separator
+	process (reset_n_i, clock_i)
+		variable cnt_high_v			: unsigned(23 downto 0);
+		variable cnt_low_v			: unsigned(23 downto 0);
+	begin
+		if reset_n_i = '0' then
+			cnt_high_v	:= (others => '0');
+			cnt_low_v	:= (others => '0');
+			hsync_n_s	<= '1';
+			vsync_n_s	<= '1';			
+		elsif falling_edge(clock_i) then
+			csync_edge_s(1)	<= csync_edge_s(0);
+			-- CSync
+			if csync_edge_s = "10" then
+				cnt_low_v	:= (others => '0');
+			elsif csync_edge_s = "01" then
+				cnt_high_v	:= (others => '0');
+			else
+				if csync_vdp_n_i = '1' then
+					if cnt_high_v < (1000000 / 20) then
+						cnt_high_v	:= cnt_high_v + 1;
+					end if;
+					if cnt_high_v > (5000 / 20) then
+						hsync_n_s <= '1';
+						vsync_n_s <= '1';
+					end if;
+				else
+					if cnt_low_v < (1000000 / 20) then
+						cnt_low_v	:= cnt_low_v + 1;
+					end if;
+					if cnt_high_v > (5000 / 20) and cnt_low_v < (4500 / 20) then
+						hsync_n_s <= '0';
+						vsync_n_s <= '1';
+					else
+						hsync_n_s <= '1';
+						vsync_n_s <= '0';
+					end if;
+				end if;
+			end if;
+		end if;
+	end process;

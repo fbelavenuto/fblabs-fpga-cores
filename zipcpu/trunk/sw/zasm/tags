@@ -1,0 +1,188 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+BITFIELD	zopcodes.h	8;"	d
+DBLREGOP	zparser.cpp	361;"	d	file:
+IMMFIELD	zopcodes.h	12;"	d
+IMMOP	zparser.cpp	358;"	d	file:
+ISLCLROP	zopcodes.h	7;"	d
+ISSUPROP	zopcodes.h	6;"	d
+ISUSEROP	zopcodes.h	5;"	d
+OPUNUSED	zopcodes.h	4;"	d
+REGFIELD	zopcodes.h	9;"	d
+SRGFIELD	zopcodes.h	11;"	d
+TWOC_H	twoc.h	40;"	d
+URGFIELD	zopcodes.h	10;"	d
+ZIPA	zparser.h	/^	typedef	unsigned int	ZIPI, ZIPA;$/;"	t	class:ZPARSER
+ZIPCOND	zparser.h	/^	} ZIPCOND;$/;"	t	class:ZPARSER	typeref:enum:ZPARSER::__anon3
+ZIPC_ALWAYS	zparser.h	/^		ZIPC_ALWAYS, ZIPC_Z, ZIPC_NZ, ZIPC_GE, ZIPC_GT, ZIPC_LT,$/;"	e	enum:ZPARSER::__anon3
+ZIPC_C	zparser.h	/^		ZIPC_C, ZIPC_V$/;"	e	enum:ZPARSER::__anon3
+ZIPC_GE	zparser.h	/^		ZIPC_ALWAYS, ZIPC_Z, ZIPC_NZ, ZIPC_GE, ZIPC_GT, ZIPC_LT,$/;"	e	enum:ZPARSER::__anon3
+ZIPC_GT	zparser.h	/^		ZIPC_ALWAYS, ZIPC_Z, ZIPC_NZ, ZIPC_GE, ZIPC_GT, ZIPC_LT,$/;"	e	enum:ZPARSER::__anon3
+ZIPC_LT	zparser.h	/^		ZIPC_ALWAYS, ZIPC_Z, ZIPC_NZ, ZIPC_GE, ZIPC_GT, ZIPC_LT,$/;"	e	enum:ZPARSER::__anon3
+ZIPC_NZ	zparser.h	/^		ZIPC_ALWAYS, ZIPC_Z, ZIPC_NZ, ZIPC_GE, ZIPC_GT, ZIPC_LT,$/;"	e	enum:ZPARSER::__anon3
+ZIPC_V	zparser.h	/^		ZIPC_C, ZIPC_V$/;"	e	enum:ZPARSER::__anon3
+ZIPC_Z	zparser.h	/^		ZIPC_ALWAYS, ZIPC_Z, ZIPC_NZ, ZIPC_GE, ZIPC_GT, ZIPC_LT,$/;"	e	enum:ZPARSER::__anon3
+ZIPI	zopcodes.h	/^typedef	unsigned int	ZIPI;$/;"	t
+ZIPI	zparser.cpp	/^typedef	ZPARSER::ZIPI ZIPI;	\/\/ A Zip Instruction (i.e. uint32)$/;"	t	file:
+ZIPI	zparser.h	/^	typedef	unsigned int	ZIPI, ZIPA;$/;"	t	class:ZPARSER
+ZIPIMM	zparser.h	/^	typedef	int	ZIPIMM;$/;"	t	class:ZPARSER
+ZIPREG	zparser.h	/^	} ZIPREG;$/;"	t	class:ZPARSER	typeref:enum:ZPARSER::__anon2
+ZIP_CC	zparser.h	/^			ZIP_SP, ZIP_CC, ZIP_PC,$/;"	e	enum:ZPARSER::__anon2
+ZIP_PC	zparser.h	/^			ZIP_SP, ZIP_CC, ZIP_PC,$/;"	e	enum:ZPARSER::__anon2
+ZIP_R0	zparser.h	/^		ZIP_R0, ZIP_R1, ZIP_R2, ZIP_R3, ZIP_R4, ZIP_R5, ZIP_R6, ZIP_R7,$/;"	e	enum:ZPARSER::__anon2
+ZIP_R1	zparser.h	/^		ZIP_R0, ZIP_R1, ZIP_R2, ZIP_R3, ZIP_R4, ZIP_R5, ZIP_R6, ZIP_R7,$/;"	e	enum:ZPARSER::__anon2
+ZIP_R10	zparser.h	/^		ZIP_R8, ZIP_R9, ZIP_R10, ZIP_R11, ZIP_R12,$/;"	e	enum:ZPARSER::__anon2
+ZIP_R11	zparser.h	/^		ZIP_R8, ZIP_R9, ZIP_R10, ZIP_R11, ZIP_R12,$/;"	e	enum:ZPARSER::__anon2
+ZIP_R12	zparser.h	/^		ZIP_R8, ZIP_R9, ZIP_R10, ZIP_R11, ZIP_R12,$/;"	e	enum:ZPARSER::__anon2
+ZIP_R2	zparser.h	/^		ZIP_R0, ZIP_R1, ZIP_R2, ZIP_R3, ZIP_R4, ZIP_R5, ZIP_R6, ZIP_R7,$/;"	e	enum:ZPARSER::__anon2
+ZIP_R3	zparser.h	/^		ZIP_R0, ZIP_R1, ZIP_R2, ZIP_R3, ZIP_R4, ZIP_R5, ZIP_R6, ZIP_R7,$/;"	e	enum:ZPARSER::__anon2
+ZIP_R4	zparser.h	/^		ZIP_R0, ZIP_R1, ZIP_R2, ZIP_R3, ZIP_R4, ZIP_R5, ZIP_R6, ZIP_R7,$/;"	e	enum:ZPARSER::__anon2
+ZIP_R5	zparser.h	/^		ZIP_R0, ZIP_R1, ZIP_R2, ZIP_R3, ZIP_R4, ZIP_R5, ZIP_R6, ZIP_R7,$/;"	e	enum:ZPARSER::__anon2
+ZIP_R6	zparser.h	/^		ZIP_R0, ZIP_R1, ZIP_R2, ZIP_R3, ZIP_R4, ZIP_R5, ZIP_R6, ZIP_R7,$/;"	e	enum:ZPARSER::__anon2
+ZIP_R7	zparser.h	/^		ZIP_R0, ZIP_R1, ZIP_R2, ZIP_R3, ZIP_R4, ZIP_R5, ZIP_R6, ZIP_R7,$/;"	e	enum:ZPARSER::__anon2
+ZIP_R8	zparser.h	/^		ZIP_R8, ZIP_R9, ZIP_R10, ZIP_R11, ZIP_R12,$/;"	e	enum:ZPARSER::__anon2
+ZIP_R9	zparser.h	/^		ZIP_R8, ZIP_R9, ZIP_R10, ZIP_R11, ZIP_R12,$/;"	e	enum:ZPARSER::__anon2
+ZIP_Rnone	zparser.h	/^		ZIP_Rnone$/;"	e	enum:ZPARSER::__anon2
+ZIP_SP	zparser.h	/^			ZIP_SP, ZIP_CC, ZIP_PC,$/;"	e	enum:ZPARSER::__anon2
+ZIP_uCC	zparser.h	/^			ZIP_uSP, ZIP_uCC, ZIP_uPC,$/;"	e	enum:ZPARSER::__anon2
+ZIP_uPC	zparser.h	/^			ZIP_uSP, ZIP_uCC, ZIP_uPC,$/;"	e	enum:ZPARSER::__anon2
+ZIP_uR0	zparser.h	/^		ZIP_uR0, ZIP_uR1, ZIP_uR2, ZIP_uR3, ZIP_uR4, ZIP_uR5, ZIP_uR6, ZIP_uR7,$/;"	e	enum:ZPARSER::__anon2
+ZIP_uR1	zparser.h	/^		ZIP_uR0, ZIP_uR1, ZIP_uR2, ZIP_uR3, ZIP_uR4, ZIP_uR5, ZIP_uR6, ZIP_uR7,$/;"	e	enum:ZPARSER::__anon2
+ZIP_uR10	zparser.h	/^		ZIP_uR8, ZIP_uR9, ZIP_uR10, ZIP_uR11, ZIP_uR12,$/;"	e	enum:ZPARSER::__anon2
+ZIP_uR11	zparser.h	/^		ZIP_uR8, ZIP_uR9, ZIP_uR10, ZIP_uR11, ZIP_uR12,$/;"	e	enum:ZPARSER::__anon2
+ZIP_uR12	zparser.h	/^		ZIP_uR8, ZIP_uR9, ZIP_uR10, ZIP_uR11, ZIP_uR12,$/;"	e	enum:ZPARSER::__anon2
+ZIP_uR2	zparser.h	/^		ZIP_uR0, ZIP_uR1, ZIP_uR2, ZIP_uR3, ZIP_uR4, ZIP_uR5, ZIP_uR6, ZIP_uR7,$/;"	e	enum:ZPARSER::__anon2
+ZIP_uR3	zparser.h	/^		ZIP_uR0, ZIP_uR1, ZIP_uR2, ZIP_uR3, ZIP_uR4, ZIP_uR5, ZIP_uR6, ZIP_uR7,$/;"	e	enum:ZPARSER::__anon2
+ZIP_uR4	zparser.h	/^		ZIP_uR0, ZIP_uR1, ZIP_uR2, ZIP_uR3, ZIP_uR4, ZIP_uR5, ZIP_uR6, ZIP_uR7,$/;"	e	enum:ZPARSER::__anon2
+ZIP_uR5	zparser.h	/^		ZIP_uR0, ZIP_uR1, ZIP_uR2, ZIP_uR3, ZIP_uR4, ZIP_uR5, ZIP_uR6, ZIP_uR7,$/;"	e	enum:ZPARSER::__anon2
+ZIP_uR6	zparser.h	/^		ZIP_uR0, ZIP_uR1, ZIP_uR2, ZIP_uR3, ZIP_uR4, ZIP_uR5, ZIP_uR6, ZIP_uR7,$/;"	e	enum:ZPARSER::__anon2
+ZIP_uR7	zparser.h	/^		ZIP_uR0, ZIP_uR1, ZIP_uR2, ZIP_uR3, ZIP_uR4, ZIP_uR5, ZIP_uR6, ZIP_uR7,$/;"	e	enum:ZPARSER::__anon2
+ZIP_uR8	zparser.h	/^		ZIP_uR8, ZIP_uR9, ZIP_uR10, ZIP_uR11, ZIP_uR12,$/;"	e	enum:ZPARSER::__anon2
+ZIP_uR9	zparser.h	/^		ZIP_uR8, ZIP_uR9, ZIP_uR10, ZIP_uR11, ZIP_uR12,$/;"	e	enum:ZPARSER::__anon2
+ZIP_uSP	zparser.h	/^			ZIP_uSP, ZIP_uCC, ZIP_uPC,$/;"	e	enum:ZPARSER::__anon2
+ZOPCODE	zopcodes.h	/^} ZOPCODE;$/;"	t	typeref:struct:__anon1
+ZOPCODES_H	zopcodes.h	2;"	d
+ZPARSER	zparser.h	/^class	ZPARSER {$/;"	c
+ZPARSER_H	zparser.h	2;"	d
+as_file	zasm.cpp	/^void	as_file(FILE *fout, FILE *fp) {$/;"	f
+as_file	zasm.cpp	/^void	as_file(FILE *fout, const char *fn) {$/;"	f
+dump_file	zdump.cpp	/^void	dump_file(const char *fn) {$/;"	f
+getbits	zopcodes.cpp	/^static	int	getbits(const ZIPI ins, const int which) {$/;"	f	file:
+iscomment	zparser.cpp	/^bool	ZPARSER::iscomment(const char *line) const {$/;"	f	class:ZPARSER
+islabel	zparser.cpp	/^bool	ZPARSER::islabel(const char *line) const {$/;"	f	class:ZPARSER
+main	optest.cpp	/^int main(int argc, char **argv) {$/;"	f
+main	zasm.cpp	/^int main(int argc, char **argv) {$/;"	f
+main	zdump.cpp	/^int main(int argc, char **argv) {$/;"	f
+nzoplist	zopcodes.cpp	/^const int	nzoplist = (sizeof(zoplist)\/sizeof(ZOPCODE));$/;"	v
+op_add	zparser.cpp	/^ZIPI	ZPARSER::op_add(ZIPCOND cnd, ZIPIMM imm, ZIPREG b, ZIPREG a) const {$/;"	f	class:ZPARSER
+op_add	zparser.cpp	/^} ZIPI	ZPARSER::op_add(ZIPCOND cnd, ZIPIMM imm, ZIPREG a) const {$/;"	f	class:ZPARSER
+op_add	zparser.h	/^	ZIPI	op_add(ZIPIMM imm, ZIPREG a) const	\/\/ GOOD$/;"	f	class:ZPARSER
+op_add	zparser.h	/^	ZIPI	op_add(ZIPIMM imm, ZIPREG b, ZIPREG a) const$/;"	f	class:ZPARSER
+op_and	zparser.cpp	/^ZIPI	ZPARSER::op_and(ZIPCOND cnd, ZIPIMM imm, ZIPREG b, ZIPREG a) const {$/;"	f	class:ZPARSER
+op_and	zparser.cpp	/^} ZIPI	ZPARSER::op_and(ZIPCOND cnd, ZIPIMM imm, ZIPREG a) const {$/;"	f	class:ZPARSER
+op_and	zparser.h	/^	ZIPI	op_and(ZIPIMM imm, ZIPREG a) const$/;"	f	class:ZPARSER
+op_and	zparser.h	/^	ZIPI	op_and(ZIPIMM imm, ZIPREG b, ZIPREG a) const$/;"	f	class:ZPARSER
+op_asl	zparser.h	/^	ZIPI	op_asl(ZIPCOND cnd, ZIPIMM imm, ZIPREG a) const$/;"	f	class:ZPARSER
+op_asl	zparser.h	/^	ZIPI	op_asl(ZIPCOND cnd, ZIPIMM imm, ZIPREG b, ZIPREG a) const$/;"	f	class:ZPARSER
+op_asl	zparser.h	/^	ZIPI	op_asl(ZIPIMM imm, ZIPREG a) const$/;"	f	class:ZPARSER
+op_asl	zparser.h	/^	ZIPI	op_asl(ZIPIMM imm, ZIPREG b, ZIPREG a) const$/;"	f	class:ZPARSER
+op_asr	zparser.cpp	/^ZIPI	ZPARSER::op_asr(ZIPCOND cnd, ZIPIMM imm, ZIPREG b, ZIPREG a) const {$/;"	f	class:ZPARSER
+op_asr	zparser.cpp	/^} ZIPI	ZPARSER::op_asr(ZIPCOND cnd, ZIPIMM imm, ZIPREG a) const {$/;"	f	class:ZPARSER
+op_asr	zparser.h	/^	ZIPI	op_asr(ZIPIMM imm, ZIPREG a) const$/;"	f	class:ZPARSER
+op_asr	zparser.h	/^	ZIPI	op_asr(ZIPIMM imm, ZIPREG b, ZIPREG a) const$/;"	f	class:ZPARSER
+op_bge	zparser.h	/^	ZIPI	op_bge(ZIPIMM imm) const$/;"	f	class:ZPARSER
+op_bgt	zparser.h	/^	ZIPI	op_bgt(ZIPIMM imm) const$/;"	f	class:ZPARSER
+op_blt	zparser.h	/^	ZIPI	op_blt(ZIPIMM imm) const$/;"	f	class:ZPARSER
+op_bnz	zparser.h	/^	ZIPI	op_bnz(ZIPIMM imm) const$/;"	f	class:ZPARSER
+op_bra	zparser.h	/^	ZIPI	op_bra(ZIPCOND cnd, ZIPIMM imm) const$/;"	f	class:ZPARSER
+op_bra	zparser.h	/^	ZIPI	op_bra(ZIPIMM imm) const$/;"	f	class:ZPARSER
+op_brc	zparser.h	/^	ZIPI	op_brc(ZIPIMM imm) const$/;"	f	class:ZPARSER
+op_break	zparser.cpp	/^ZIPI	ZPARSER::op_break(void) const {$/;"	f	class:ZPARSER
+op_brv	zparser.h	/^	ZIPI	op_brv(ZIPIMM imm) const$/;"	f	class:ZPARSER
+op_brz	zparser.h	/^	ZIPI	op_brz(ZIPIMM imm) const$/;"	f	class:ZPARSER
+op_busy	zparser.h	/^	ZIPI	op_busy(ZIPCOND c) const {$/;"	f	class:ZPARSER
+op_busy	zparser.h	/^	ZIPI	op_busy(void) const {$/;"	f	class:ZPARSER
+op_bv	zparser.h	/^	ZIPI	op_bv(ZIPIMM imm) const$/;"	f	class:ZPARSER
+op_clr	zparser.h	/^	ZIPI	op_clr(ZIPREG a) const { return op_ldi(0, a); }$/;"	f	class:ZPARSER
+op_clrf	zparser.h	/^	ZIPI	op_clrf(ZIPCOND cnd, ZIPREG a) const$/;"	f	class:ZPARSER
+op_clrf	zparser.h	/^	ZIPI	op_clrf(ZIPREG a) const$/;"	f	class:ZPARSER
+op_cmp	zparser.cpp	/^ZIPI	ZPARSER::op_cmp(ZIPCOND cnd, ZIPIMM imm, ZIPREG a) const {$/;"	f	class:ZPARSER
+op_cmp	zparser.cpp	/^ZIPI	ZPARSER::op_cmp(ZIPCOND cnd, ZIPIMM imm, ZIPREG b, ZIPREG a) const {$/;"	f	class:ZPARSER
+op_cmp	zparser.h	/^	ZIPI	op_cmp(ZIPIMM imm, ZIPREG a) const$/;"	f	class:ZPARSER
+op_cmp	zparser.h	/^	ZIPI	op_cmp(ZIPIMM imm, ZIPREG b, ZIPREG a) const$/;"	f	class:ZPARSER
+op_halt	zparser.h	/^	ZIPI	op_halt(ZIPCOND c) const {$/;"	f	class:ZPARSER
+op_halt	zparser.h	/^	ZIPI	op_halt(void) const {$/;"	f	class:ZPARSER
+op_jmp	zparser.h	/^	ZIPI	op_jmp(ZIPCOND c, ZIPIMM imm, ZIPREG r) const$/;"	f	class:ZPARSER
+op_ldi	zparser.cpp	/^ZIPI	ZPARSER::op_ldi(ZIPIMM imm, ZIPREG a) const {$/;"	f	class:ZPARSER
+op_ldihi	zparser.cpp	/^ZIPI	ZPARSER::op_ldihi(ZIPCOND cnd, ZIPIMM imm, ZIPREG a) const {$/;"	f	class:ZPARSER
+op_ldihi	zparser.h	/^	ZIPI	op_ldihi(ZIPIMM imm, ZIPREG a) const$/;"	f	class:ZPARSER
+op_ldilo	zparser.cpp	/^ZIPI	ZPARSER::op_ldilo(ZIPCOND cnd, ZIPIMM imm, ZIPREG a) const {$/;"	f	class:ZPARSER
+op_ldilo	zparser.h	/^	ZIPI	op_ldilo(ZIPIMM imm, ZIPREG a) const$/;"	f	class:ZPARSER
+op_ljmp	zparser.h	/^	ZIPI	op_ljmp(ZIPCOND c, ZIPIMM imm) const {$/;"	f	class:ZPARSER
+op_lod	zparser.cpp	/^ZIPI	ZPARSER::op_lod(ZIPCOND cnd, ZIPIMM imm, ZIPREG a) const {$/;"	f	class:ZPARSER
+op_lod	zparser.cpp	/^ZIPI	ZPARSER::op_lod(ZIPCOND cnd, ZIPIMM imm, ZIPREG b, ZIPREG a) const {$/;"	f	class:ZPARSER
+op_lod	zparser.h	/^	ZIPI	op_lod(ZIPIMM imm, ZIPREG a) const$/;"	f	class:ZPARSER
+op_lod	zparser.h	/^	ZIPI	op_lod(ZIPIMM imm, ZIPREG b, ZIPREG a) const$/;"	f	class:ZPARSER
+op_lsl	zparser.cpp	/^ZIPI	ZPARSER::op_lsl(ZIPCOND cnd, ZIPIMM imm, ZIPREG b, ZIPREG a) const {$/;"	f	class:ZPARSER
+op_lsl	zparser.cpp	/^} ZIPI	ZPARSER::op_lsl(ZIPCOND cnd, ZIPIMM imm, ZIPREG a) const {$/;"	f	class:ZPARSER
+op_lsl	zparser.h	/^	ZIPI	op_lsl(ZIPIMM imm, ZIPREG a) const$/;"	f	class:ZPARSER
+op_lsl	zparser.h	/^	ZIPI	op_lsl(ZIPIMM imm, ZIPREG b, ZIPREG a) const$/;"	f	class:ZPARSER
+op_lsr	zparser.cpp	/^ZIPI	ZPARSER::op_lsr(ZIPCOND cnd, ZIPIMM imm, ZIPREG b, ZIPREG a) const {$/;"	f	class:ZPARSER
+op_lsr	zparser.cpp	/^} ZIPI	ZPARSER::op_lsr(ZIPCOND cnd, ZIPIMM imm, ZIPREG a) const {$/;"	f	class:ZPARSER
+op_lsr	zparser.h	/^	ZIPI	op_lsr(ZIPIMM imm, ZIPREG a) const$/;"	f	class:ZPARSER
+op_lsr	zparser.h	/^	ZIPI	op_lsr(ZIPIMM imm, ZIPREG b, ZIPREG a) const$/;"	f	class:ZPARSER
+op_mov	zparser.cpp	/^ZIPI	ZPARSER::op_mov(ZIPCOND cnd, ZIPIMM imm, ZIPREG b, ZIPREG a) const {$/;"	f	class:ZPARSER
+op_mov	zparser.h	/^	ZIPI	op_mov(ZIPIMM imm, ZIPREG b, ZIPREG a) const$/;"	f	class:ZPARSER
+op_mov	zparser.h	/^	ZIPI	op_mov(ZIPREG b, ZIPREG a) const$/;"	f	class:ZPARSER
+op_noop	zparser.cpp	/^ZIPI	ZPARSER::op_noop(void) const {$/;"	f	class:ZPARSER
+op_not	zparser.h	/^	ZIPI	op_not(ZIPCOND c, ZIPREG r) const$/;"	f	class:ZPARSER
+op_not	zparser.h	/^	ZIPI	op_not(ZIPREG r) const$/;"	f	class:ZPARSER
+op_or	zparser.cpp	/^ZIPI	ZPARSER::op_or(ZIPCOND cnd, ZIPIMM imm, ZIPREG b, ZIPREG a) const {$/;"	f	class:ZPARSER
+op_or	zparser.cpp	/^} ZIPI	ZPARSER::op_or(ZIPCOND cnd, ZIPIMM imm, ZIPREG a) const {$/;"	f	class:ZPARSER
+op_or	zparser.h	/^	ZIPI	op_or(ZIPIMM imm, ZIPREG a) const$/;"	f	class:ZPARSER
+op_or	zparser.h	/^	ZIPI	op_or(ZIPIMM imm, ZIPREG b, ZIPREG a) const$/;"	f	class:ZPARSER
+op_rtu	zparser.h	/^	ZIPI	op_rtu(ZIPCOND cnd) const {$/;"	f	class:ZPARSER
+op_rtu	zparser.h	/^	ZIPI	op_rtu(void) const {$/;"	f	class:ZPARSER
+op_sto	zparser.cpp	/^ZIPI	ZPARSER::op_sto(ZIPCOND cnd, ZIPREG v, ZIPIMM imm, ZIPREG b) const {$/;"	f	class:ZPARSER
+op_sto	zparser.cpp	/^} ZIPI	ZPARSER::op_sto(ZIPCOND cnd, ZIPREG v, ZIPIMM imm) const {$/;"	f	class:ZPARSER
+op_sto	zparser.h	/^	ZIPI	op_sto(ZIPREG v, ZIPIMM imm) const$/;"	f	class:ZPARSER
+op_sto	zparser.h	/^	ZIPI	op_sto(ZIPREG v, ZIPIMM imm, ZIPREG b) const$/;"	f	class:ZPARSER
+op_sub	zparser.cpp	/^ZIPI	ZPARSER::op_sub(ZIPCOND cnd, ZIPIMM imm, ZIPREG b, ZIPREG a) const {$/;"	f	class:ZPARSER
+op_sub	zparser.cpp	/^} ZIPI	ZPARSER::op_sub(ZIPCOND cnd, ZIPIMM imm, ZIPREG a) const {$/;"	f	class:ZPARSER
+op_sub	zparser.h	/^	ZIPI	op_sub(ZIPIMM imm, ZIPREG a) const$/;"	f	class:ZPARSER
+op_sub	zparser.h	/^	ZIPI	op_sub(ZIPIMM imm, ZIPREG b, ZIPREG a) const$/;"	f	class:ZPARSER
+op_trap	zparser.cpp	/^ZIPI	ZPARSER::op_trap(ZIPCOND cnd, ZIPIMM imm) const {$/;"	f	class:ZPARSER
+op_trap	zparser.h	/^	ZIPI	op_trap(ZIPIMM imm) const$/;"	f	class:ZPARSER
+op_tst	zparser.cpp	/^ZIPI	ZPARSER::op_tst(ZIPCOND cnd, ZIPIMM imm, ZIPREG b, ZIPREG a) const {$/;"	f	class:ZPARSER
+op_tst	zparser.cpp	/^} ZIPI	ZPARSER::op_tst(ZIPCOND cnd, ZIPIMM imm, ZIPREG a) const {$/;"	f	class:ZPARSER
+op_tst	zparser.h	/^	ZIPI	op_tst(ZIPCOND cnd, ZIPREG a) const$/;"	f	class:ZPARSER
+op_tst	zparser.h	/^	ZIPI	op_tst(ZIPIMM imm, ZIPREG a) const$/;"	f	class:ZPARSER
+op_wait	zparser.h	/^	ZIPI	op_wait(ZIPCOND c) const {$/;"	f	class:ZPARSER
+op_wait	zparser.h	/^	ZIPI	op_wait(void) const {$/;"	f	class:ZPARSER
+op_xor	zparser.cpp	/^ZIPI	ZPARSER::op_xor(ZIPCOND cnd, ZIPIMM imm, ZIPREG b, ZIPREG a) const {$/;"	f	class:ZPARSER
+op_xor	zparser.cpp	/^} ZIPI	ZPARSER::op_xor(ZIPCOND cnd, ZIPIMM imm, ZIPREG a) const {$/;"	f	class:ZPARSER
+op_xor	zparser.h	/^	ZIPI	op_xor(ZIPIMM imm, ZIPREG a) const$/;"	f	class:ZPARSER
+op_xor	zparser.h	/^	ZIPI	op_xor(ZIPIMM imm, ZIPREG b, ZIPREG a) const$/;"	f	class:ZPARSER
+optest	optest.cpp	/^void	optest(const ZIPI ins) {$/;"	f
+parse	zparser.cpp	/^bool	ZPARSER::parse(const char *line, ZPARSER::ZIPA &pc, ZPARSER::ZIPI &instruction, const unsigned int lineno) {$/;"	f	class:ZPARSER
+parse_op	zparser.cpp	/^bool	ZPARSER::parse_op(const char *line, ZPARSER::ZIPA pc,$/;"	f	class:ZPARSER
+rndbits	twoc.cpp	/^unsigned long	rndbits(const long val, const int bits_in, const int bits_out) {$/;"	f
+s_cf	zopcodes.h	/^	int	s_result, s_ra, s_rb, s_i, s_cf;$/;"	m	struct:__anon1
+s_i	zopcodes.h	/^	int	s_result, s_ra, s_rb, s_i, s_cf;$/;"	m	struct:__anon1
+s_mask	zopcodes.h	/^	ZIPI	s_mask, s_val;$/;"	m	struct:__anon1
+s_opstr	zopcodes.h	/^	char	s_opstr[8];$/;"	m	struct:__anon1
+s_ra	zopcodes.h	/^	int	s_result, s_ra, s_rb, s_i, s_cf;$/;"	m	struct:__anon1
+s_rb	zopcodes.h	/^	int	s_result, s_ra, s_rb, s_i, s_cf;$/;"	m	struct:__anon1
+s_result	zopcodes.h	/^	int	s_result, s_ra, s_rb, s_i, s_cf;$/;"	m	struct:__anon1
+s_val	zopcodes.h	/^	ZIPI	s_mask, s_val;$/;"	m	struct:__anon1
+sbits	twoc.cpp	/^long	sbits(const long val, const int bits) {$/;"	f
+sfits	twoc.cpp	/^bool	sfits(const long val, const int bits) {$/;"	f
+ubits	twoc.cpp	/^unsigned long	ubits(const long val, const int bits) {$/;"	f
+zipi_to_string	zopcodes.cpp	/^void	zipi_to_string(const ZIPI ins, char *line) {$/;"	f
+zop_ccstr	zopcodes.cpp	/^const	char	*zop_ccstr[] = {$/;"	v
+zop_regstr	zopcodes.cpp	/^const	char	*zop_regstr[] = {$/;"	v
+zoplist	zopcodes.cpp	/^const ZOPCODE	zoplist[] = {$/;"	v

@@ -1,2 +1,3 @@
-# fblabs-fpga-cores
-Varios cores em FPFA
+# FPGA Cores
+
+Cores diversos em FPGA
