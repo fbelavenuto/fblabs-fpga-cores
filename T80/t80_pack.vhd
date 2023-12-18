@@ -79,7 +79,8 @@ package T80_Pack is
 		Flag_H : integer := 4;
 		Flag_Y : integer := 5;
 		Flag_Z : integer := 6;
-		Flag_S : integer := 7
+		Flag_S : integer := 7;
+		NMOS_g : std_logic := '1'		-- 0 => OUT(C),0     1 => OUT(C),255
 	);
 	port(
 		RESET_n         : in std_logic;
@@ -106,7 +107,6 @@ package T80_Pack is
 		IntE            : out std_logic;
 		Stop            : out std_logic;
 		R800_mode       : in  std_logic := '0';
-		out0            : in  std_logic := '0';  -- 0 => OUT(C),0, 1 => OUT(C),255
 		REG             : out std_logic_vector(211 downto 0); -- IFF2, IFF1, IM, IY, HL', DE', BC', IX, HL, DE, BC, PC, SP, R, I, F', A', F, A
 		DIRSet          : in  std_logic := '0';
 		DIR             : in  std_logic_vector(211 downto 0) := (others => '0') -- IFF2, IFF1, IM, IY, HL', DE', BC', IX, HL, DE, BC, PC, SP, R, I, F', A', F, A
@@ -246,59 +246,61 @@ package T80_Pack is
 	end component;
 
 	component T80a
-		generic (
-		   mode_g      : integer            := 0;     -- 0 => Z80, 1 => Fast Z80, 2 => 8080, 3 => GB
-		   iowait_g    : integer            := 1      -- 0 => Single I/O cycle, 1 => Std I/O cycle
-		);
-		port (
-		   r800_mode_i : in    std_logic;
-		   reset_n_i   : in    std_logic;
-		   clock_i     : in    std_logic;
-		   address_o   : out   std_logic_vector(15 downto 0);
-		   data_i      : in    std_logic_vector(7 downto 0);
-		   data_o      : out   std_logic_vector(7 downto 0);
-		   wait_n_i    : in    std_logic;
-		   int_n_i     : in    std_logic;
-		   nmi_n_i     : in    std_logic;
-		   m1_n_o      : out   std_logic;
-		   mreq_n_o    : out   std_logic;
-		   iorq_n_o    : out   std_logic;
-		   rd_n_o      : out   std_logic;
-		   wr_n_o      : out   std_logic;
-		   refresh_n_o : out   std_logic;
-		   halt_n_o    : out   std_logic;
-		   busrq_n_i   : in    std_logic;
-		   busak_n_o   : out   std_logic
-		);
-	 end component;
+	generic (
+		mode_g		: integer		:= 0;		-- 0 => Z80, 1 => Fast Z80, 2 => 8080, 3 => GB
+		iowait_g	: integer		:= 1;		-- 0 => Single I/O cycle, 1 => Std I/O cycle
+		nmos_g		: std_logic		:= '1'		-- 0 => OUT(C),255, 1 => OUT(C),0
+	);
+	port (
+		r800_mode_i : in    std_logic;
+		reset_n_i   : in    std_logic;
+		clock_i     : in    std_logic;
+		address_o   : out   std_logic_vector(15 downto 0);
+		data_i      : in    std_logic_vector(7 downto 0);
+		data_o      : out   std_logic_vector(7 downto 0);
+		wait_n_i    : in    std_logic;
+		int_n_i     : in    std_logic;
+		nmi_n_i     : in    std_logic;
+		m1_n_o      : out   std_logic;
+		mreq_n_o    : out   std_logic;
+		iorq_n_o    : out   std_logic;
+		rd_n_o      : out   std_logic;
+		wr_n_o      : out   std_logic;
+		refresh_n_o : out   std_logic;
+		halt_n_o    : out   std_logic;
+		busrq_n_i   : in    std_logic;
+		busak_n_o   : out   std_logic
+	);
+	end component;
 
-	 component T80s
-		generic(
-			Mode    : integer := 0; -- 0 => Z80, 1 => Fast Z80, 2 => 8080, 3 => GB
-			T2Write : integer := 1; -- 0 => WR_n active in T3, /=0 => WR_n active in T2
-			IOWait  : integer := 1  -- 0 => Single cycle I/O, 1 => Std I/O cycle
-		);
-		port(
-			RESET_n : in std_logic;
-			CLK     : in std_logic;
-			CEN     : in std_logic := '1';
-			WAIT_n  : in std_logic := '1';
-			INT_n	  : in std_logic := '1';
-			NMI_n	  : in std_logic := '1';
-			BUSRQ_n : in std_logic := '1';
-			M1_n    : out std_logic;
-			MREQ_n  : out std_logic;
-			IORQ_n  : out std_logic;
-			RD_n    : out std_logic;
-			WR_n    : out std_logic;
-			RFSH_n  : out std_logic;
-			HALT_n  : out std_logic;
-			BUSAK_n : out std_logic;
-			OUT0    : in  std_logic := '0';  -- 0 => OUT(C),0, 1 => OUT(C),255
-			A       : out std_logic_vector(15 downto 0);
-			DI      : in std_logic_vector(7 downto 0);
-			DO      : out std_logic_vector(7 downto 0)
-		);
+	component T80s
+	generic(
+		mode_g		: integer	:= 0;	-- 0 => Z80, 1 => Fast Z80, 2 => 8080, 3 => GB
+		t2write_g	: integer	:= 1;	-- 0 => WR_n active in T3, /=0 => WR_n active in T2
+		iowait_g	: integer	:= 1;	-- 0 => Single cycle I/O, 1 => Std I/O cycle
+		nmos_g		: std_logic	:= '1'	-- 0 => OUT(C),255, 1 => OUT(C),0
+	);
+	port (
+		r800_mode_i	: in  std_logic;
+		reset_n_i	: in  std_logic;
+		clock_i		: in  std_logic;
+		clock_en_i	: in  std_logic							:= '1';
+		address_o	: out std_logic_vector(15 downto 0);
+		data_i		: in  std_logic_vector(7 downto 0);
+		data_o		: out std_logic_vector(7 downto 0);
+		wait_n_i	: in  std_logic							:= '1';
+		int_n_i		: in  std_logic							:= '1';
+		nmi_n_i		: in  std_logic							:= '1';
+		m1_n_o		: out std_logic;
+		mreq_n_o	: out std_logic;
+		iorq_n_o	: out std_logic;
+		rd_n_o		: out std_logic;
+		wr_n_o		: out std_logic;
+		refresh_n_o	: out std_logic;
+		halt_n_o	: out std_logic;
+		busrq_n_i	: in  std_logic							:= '1';
+		busak_n_o	: out std_logic
+	);
 	end component;	
 
 	component T80as

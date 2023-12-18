@@ -1,13 +1,13 @@
 onerror {resume}
 quietly WaveActivateNextPane {} 0
 add wave -noupdate /tb/reset_n
-add wave -noupdate -radix unsigned /tb/u_target/MCycle
-add wave -noupdate -radix unsigned /tb/u_target/TState
+add wave -noupdate -radix unsigned /tb/u_target/mcycle_s
+add wave -noupdate -radix unsigned /tb/u_target/tstate_s
 add wave -noupdate /tb/clock
 add wave -noupdate /tb/clock_enable
 add wave -noupdate -radix hexadecimal /tb/cpu_a
 add wave -noupdate -radix hexadecimal /tb/cpu_di
-add wave -noupdate -radix hexadecimal /tb/u_target/DI_Reg
+add wave -noupdate -radix hexadecimal /tb/u_target/data_r_s
 add wave -noupdate -radix hexadecimal /tb/cpu_do
 add wave -noupdate /tb/cpu_irq_n
 add wave -noupdate /tb/cpu_nmi_n
@@ -33,7 +33,7 @@ configure wave -datasetprefix 0
 configure wave -rowmargin 4
 configure wave -childrowmargin 2
 configure wave -gridoffset 0
-configure wave -gridperiod 1
+configure wave -gridperiod 120
 configure wave -griddelta 20
 configure wave -timeline 0
 configure wave -timelineunits ns

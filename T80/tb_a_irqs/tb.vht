@@ -36,36 +36,12 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
+use work.t80_pack.all;
 
 entity tb is
 end tb;
 
 architecture testbench of tb is
-
-	-- test target
-	component t80a
-	port(
-		r800_mode_i  : in    std_logic;
-		reset_n_i	: in    std_logic;
-		clock_i		: in    std_logic;
-		clock_en_i	: in    std_logic;
-		address_o	: out   std_logic_vector(15 downto 0);
-		data_i		: in    std_logic_vector(7 downto 0);
-		data_o		: out   std_logic_vector(7 downto 0);
-		wait_n_i	: in    std_logic;
-		int_n_i		: in    std_logic;
-		nmi_n_i		: in    std_logic;
-		m1_n_o		: out   std_logic;
-		mreq_n_o	: out   std_logic;
-		iorq_n_o	: out   std_logic;
-		rd_n_o		: out   std_logic;
-		wr_n_o		: out   std_logic;
-		refresh_n_o	: out   std_logic;
-		halt_n_o	: out   std_logic;
-		busrq_n_i	: in    std_logic;
-		busak_n_o	: out   std_logic
-	);
-	end component;
 
 	signal tb_end			: std_logic := '0';
 	signal clock			: std_logic;							-- CLOCK
@@ -85,7 +61,8 @@ architecture testbench of tb is
 	signal cpu_a			: std_logic_vector(15 downto 0);		-- A
 	signal cpu_di			: std_logic_vector(7 downto 0);
 	signal cpu_do			: std_logic_vector(7 downto 0);
-	
+	signal texto			: string (1 to 12)				:= "            ";
+
 begin
 
 	--  instance
@@ -94,7 +71,6 @@ begin
 		r800_mode_i  => '0',
 		reset_n_i	=> reset_n,
 		clock_i		=> clock,
-		clock_en_i	=> '1',
 		address_o	=> cpu_a,
 		data_i		=> cpu_di,
 		data_o		=> cpu_do,
@@ -121,9 +97,9 @@ begin
 			wait;
 		end if;
 		clock <= '1';
-		wait for 100 ns;
+		wait for 40 ns;
 		clock <= '0';
-		wait for 100 ns;
+		wait for 40 ns;
 	end process;
 
 	--
@@ -131,33 +107,33 @@ begin
 	--
 	process (cpu_m1_n, cpu_rd_n, cpu_mreq_n, cpu_ioreq_n, cpu_a)
 	begin
-		if cpu_rd_n = '0' and (cpu_mreq_n = '0' or cpu_ioreq_n = '0') then
+		if cpu_m1_n = '0' and cpu_ioreq_n = '0' then
+			cpu_di <= X"F1";	-- IM 0 (Opcode F1 = pop af) and IM 2 (low address F1)
+		elsif cpu_rd_n = '0' and (cpu_mreq_n = '0' or cpu_ioreq_n = '0') then
 			case cpu_a is
-				when X"0000" => cpu_di <= X"ED";		-- IM 2
+				when X"0000" => cpu_di <= X"ED"; texto <= "IM 2        ";
 				when X"0001" => cpu_di <= X"5E";		--
-				when X"0002" => cpu_di <= X"FB";		-- EI
-				when X"0003" => cpu_di <= X"00";		-- NOP
-				when X"0004" => cpu_di <= X"00";		-- NOP
-				when X"0005" => cpu_di <= X"ED";		-- IM 1
-				when X"0006" => cpu_di <= X"56";		--
-				when X"0007" => cpu_di <= X"FB";		-- EI
-				when X"0008" => cpu_di <= X"00";		--
-				when X"0009" => cpu_di <= X"00";		-- 
+				when X"0002" => cpu_di <= X"FB"; texto <= "EI          ";
+				when X"0003" => cpu_di <= X"00"; texto <= "NOP         ";
+				when X"0004" => cpu_di <= X"00"; texto <= "NOP         ";
+				when X"0005" => cpu_di <= X"ED"; texto <= "IM 1        ";
+				when X"0006" => cpu_di <= X"56";
+				when X"0007" => cpu_di <= X"FB"; texto <= "EI          ";
+				when X"0008" => cpu_di <= X"00";
+				when X"0009" => cpu_di <= X"00";
 
-				when X"0038" => cpu_di <= X"ED";		-- IM 0
-				when X"0039" => cpu_di <= X"46";		-- 
-				when X"003A" => cpu_di <= X"FB";		-- EI
-				when X"003B" => cpu_di <= X"00";		-- NOP
-				when X"003C" => cpu_di <= X"00";		-- NOP
-				when X"003D" => cpu_di <= X"00";		-- NOP
+				when X"0038" => cpu_di <= X"ED"; texto <= "IM 0        ";
+				when X"0039" => cpu_di <= X"46";
+				when X"003A" => cpu_di <= X"FB"; texto <= "EI          ";
+				when X"003B" => cpu_di <= X"00"; texto <= "NOP         ";
+				when X"003C" => cpu_di <= X"00"; texto <= "NOP         ";
+				when X"003D" => cpu_di <= X"00"; texto <= "NOP         ";
 
 				when X"00F1" => cpu_di <= X"05";		-- 
 				when X"00F2" => cpu_di <= X"00";		-- 
 
-				when others  => cpu_di <= X"00";		-- NOP
+				when others  => cpu_di <= X"00"; texto <= "NOP         ";
 			end case;
-		elsif cpu_m1_n = '0' and cpu_ioreq_n = '0' then
-			cpu_di <= X"F1";	-- IM 0 (Opcode F1 = pop af) and IM 2 (low addres F1)
 		else
 			cpu_di <= (others => 'Z');
 		end if;

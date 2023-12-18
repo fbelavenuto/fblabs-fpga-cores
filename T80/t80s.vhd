@@ -54,9 +54,9 @@
 --
 --	0235 : Updated for T80 interface change
 --
---	0236 : Added T2Write generic
+--	0236 : Added T2write_s generic
 --
---	0237 : Fixed T2Write with wait state
+--	0237 : Fixed T2write_s with wait state
 --
 --	0238 : Updated for T80 interface change
 --
@@ -64,130 +64,164 @@
 --
 --	0242 : Updated for T80 interface change
 --
+-------------------------------------------------------------------------------
+--
+--  2023.12 by Fabio Belavenuto: Refactoring signal names
+--
 
-library IEEE;
-use IEEE.std_logic_1164.all;
-use IEEE.numeric_std.all;
-use IEEE.STD_LOGIC_UNSIGNED.all;
-use work.T80_Pack.all;
+library ieee;
+use ieee.std_logic_1164.all;
+use ieee.numeric_std.all;
+use ieee.std_logic_unsigned.all;
+use work.t80_pack.all;
 
 entity T80s is
 	generic(
-		Mode    : integer := 0; -- 0 => Z80, 1 => Fast Z80, 2 => 8080, 3 => GB
-		T2Write : integer := 1; -- 0 => WR_n active in T3, /=0 => WR_n active in T2
-		IOWait  : integer := 1  -- 0 => Single cycle I/O, 1 => Std I/O cycle
+		mode_g		: integer	:= 0;	-- 0 => Z80, 1 => Fast Z80, 2 => 8080, 3 => GB
+		t2write_g	: integer	:= 1;	-- 0 => WR_n active in T3, /=0 => WR_n active in T2
+		iowait_g	: integer	:= 1;	-- 0 => Single cycle I/O, 1 => Std I/O cycle
+		nmos_g		: std_logic	:= '1'	-- 0 => OUT(C),255, 1 => OUT(C),0
 	);
-	port(
-		RESET_n : in std_logic;
-		CLK     : in std_logic;
-		CEN     : in std_logic := '1';
-		WAIT_n  : in std_logic := '1';
-		INT_n	  : in std_logic := '1';
-		NMI_n	  : in std_logic := '1';
-		BUSRQ_n : in std_logic := '1';
-		M1_n    : out std_logic;
-		MREQ_n  : out std_logic;
-		IORQ_n  : out std_logic;
-		RD_n    : out std_logic;
-		WR_n    : out std_logic;
-		RFSH_n  : out std_logic;
-		HALT_n  : out std_logic;
-		BUSAK_n : out std_logic;
-		OUT0    : in  std_logic := '0';  -- 0 => OUT(C),0, 1 => OUT(C),255
-		A       : out std_logic_vector(15 downto 0);
-		DI      : in std_logic_vector(7 downto 0);
-		DO      : out std_logic_vector(7 downto 0)
+	port (
+		r800_mode_i	: in  std_logic;
+		reset_n_i	: in  std_logic;
+		clock_i		: in  std_logic;
+		clock_en_i	: in  std_logic							:= '1';
+		address_o	: out std_logic_vector(15 downto 0);
+		data_i		: in  std_logic_vector(7 downto 0);
+		data_o		: out std_logic_vector(7 downto 0);
+		wait_n_i	: in  std_logic							:= '1';
+		int_n_i		: in  std_logic							:= '1';
+		nmi_n_i		: in  std_logic							:= '1';
+		m1_n_o		: out std_logic;
+		mreq_n_o	: out std_logic;
+		iorq_n_o	: out std_logic;
+		rd_n_o		: out std_logic;
+		wr_n_o		: out std_logic;
+		refresh_n_o	: out std_logic;
+		halt_n_o	: out std_logic;
+		busrq_n_i	: in  std_logic							:= '1';
+		busak_n_o	: out std_logic
 	);
 end T80s;
 
 architecture rtl of T80s is
 
-	signal IntCycle_n	: std_logic;
-	signal NoRead		: std_logic;
-	signal Write		: std_logic;
-	signal IORQ			: std_logic;
-	signal DI_Reg		: std_logic_vector(7 downto 0);
-	signal MCycle		: std_logic_vector(2 downto 0);
-	signal TState		: std_logic_vector(2 downto 0);
+	signal intcycle_n_s	: std_logic;
+	signal noread_s		: std_logic;
+	signal write_s		: std_logic;
+	signal iorq_s		: std_logic;
+	signal address_s	: std_logic_vector(15 downto 0);
+	signal address_r_s	: std_logic_vector(15 downto 0);
+	signal data_out_s	: std_logic_vector( 7 downto 0);
+	signal data_r_s		: std_logic_vector(7 downto 0);
+	signal mcycle_s		: std_logic_vector(2 downto 0);
+	signal tstate_s		: std_logic_vector(2 downto 0);
+	signal mreq_n_s		: std_logic;
+	signal iorq_n_s		: std_logic;
+	signal rd_n_s		: std_logic;
+	signal wr_n_s		: std_logic;
+	signal rfsh_n_s		: std_logic;
+	signal busak_n_s	: std_logic;
 
 begin
 
+	mreq_n_o    <= mreq_n_s		when busak_n_s = '1' else 'Z';
+	iorq_n_o    <= iorq_n_s		when busak_n_s = '1' else 'Z';
+	rd_n_o      <= rd_n_s		when busak_n_s = '1' else 'Z';
+	wr_n_o      <= wr_n_s		when busak_n_s = '1' else 'Z';
+	refresh_n_o <= rfsh_n_s		when busak_n_s = '1' else 'Z';
+	address_o   <= address_r_s	when busak_n_s = '1' else (others => 'Z');
+	data_o      <= data_out_s	when busak_n_s = '1' else (others => 'Z');
+	busak_n_o   <= busak_n_s;
+
 	u0 : T80
 	generic map(
-		Mode => Mode,
-		IOWait => IOWait)
+		Mode	=> mode_g,
+		IOWait	=> iowait_g,
+		NMOS_g	=> nmos_g
+	)
 	port map(
-		CEN => CEN,
-		M1_n => M1_n,
-		IORQ => IORQ,
-		NoRead => NoRead,
-		Write => Write,
-		RFSH_n => RFSH_n,
-		HALT_n => HALT_n,
-		WAIT_n => Wait_n,
-		INT_n => INT_n,
-		NMI_n => NMI_n,
-		RESET_n => RESET_n,
-		BUSRQ_n => BUSRQ_n,
-		BUSAK_n => BUSAK_n,
-		CLK_n => CLK,
-		A => A,
-		DInst => DI,
-		DI => DI_Reg,
-		DO => DO,
-		MC => MCycle,
-		TS => TState,
-		OUT0 => OUT0,
-		IntCycle_n => IntCycle_n
+		R800_mode	=> r800_mode_i,
+		RESET_n		=> reset_n_i,
+		CLK_n		=> clock_i,
+		CEN			=> clock_en_i,
+		WAIT_n		=> wait_n_i,
+		INT_n		=> int_n_i,
+		NMI_n		=> nmi_n_i,
+		BUSRQ_n		=> busrq_n_i,
+		M1_n		=> m1_n_o,
+		IORQ		=> iorq_s,
+		NoRead		=> noread_s,
+		Write		=> write_s,
+		RFSH_n		=> rfsh_n_s,
+		HALT_n		=> halt_n_o,
+		BUSAK_n		=> busak_n_s,
+		A			=> address_s,
+		DInst		=> data_i,
+		DI			=> data_r_s,
+		DO			=> data_out_s,
+		MC			=> mcycle_s,
+		TS			=> tstate_s,
+		IntCycle_n	=> intcycle_n_s
 	);
 
-	process (RESET_n, CLK)
+	process (reset_n_i, clock_i)
 	begin
-		if RESET_n = '0' then
-			RD_n <= '1';
-			WR_n <= '1';
-			IORQ_n <= '1';
-			MREQ_n <= '1';
-			DI_Reg <= "00000000";
-		elsif rising_edge(CLK) then
-			if CEN = '1' then
-				RD_n <= '1';
-				WR_n <= '1';
-				IORQ_n <= '1';
-				MREQ_n <= '1';
-				if MCycle = 1 then
-					if TState = 1 or (TState = 2 and Wait_n = '0') then
-						RD_n <= not IntCycle_n;
-						MREQ_n <= not IntCycle_n;
-						IORQ_n <= IntCycle_n;
+		if reset_n_i = '0' then
+			rd_n_s <= '1';
+			wr_n_s <= '1';
+			iorq_n_s <= '1';
+			mreq_n_s <= '1';
+			data_r_s <= "00000000";
+		elsif rising_edge(clock_i) then
+			if clock_en_i = '1' then
+				rd_n_s <= '1';
+				wr_n_s <= '1';
+				iorq_n_s <= '1';
+				mreq_n_s <= '1';
+				if mcycle_s = 1 then
+					if tstate_s = 1 or (tstate_s = 2 and wait_n_i = '0') then
+						rd_n_s <= not intcycle_n_s;
+						mreq_n_s <= not intcycle_n_s;
+						iorq_n_s <= intcycle_n_s;
 					end if;
-					if TState = 3 then
-						MREQ_n <= '0';
+					if tstate_s = 3 then
+						mreq_n_s <= '0';
 					end if;
 				else
-					if (TState = 1 or (TState = 2 and Wait_n = '0')) and NoRead = '0' and Write = '0' then
-						RD_n <= '0';
-						IORQ_n <= not IORQ;
-						MREQ_n <= IORQ;
+					if (tstate_s = 1 or (tstate_s = 2 and wait_n_i = '0')) and noread_s = '0' and write_s = '0' then
+						rd_n_s <= '0';
+						iorq_n_s <= not iorq_s;
+						mreq_n_s <= iorq_s;
 					end if;
-					if T2Write = 0 then
-						if TState = 2 and Write = '1' then
-							WR_n <= '0';
-							IORQ_n <= not IORQ;
-							MREQ_n <= IORQ;
+					if t2write_g = 0 then
+						if tstate_s = 2 and write_s = '1' then
+							wr_n_s <= '0';
+							iorq_n_s <= not iorq_s;
+							mreq_n_s <= iorq_s;
 						end if;
 					else
-						if (TState = 1 or (TState = 2 and Wait_n = '0')) and Write = '1' then
-							WR_n <= '0';
-							IORQ_n <= not IORQ;
-							MREQ_n <= IORQ;
+						if (tstate_s = 1 or (tstate_s = 2 and wait_n_i = '0')) and write_s = '1' then
+							wr_n_s <= '0';
+							iorq_n_s <= not iorq_s;
+							mreq_n_s <= iorq_s;
 						end if;
 					end if;
 				end if;
-				if TState = 2 and Wait_n = '1' then
-					DI_Reg <= DI;
+				if tstate_s = 2 and wait_n_i = '1' then
+					data_r_s <= data_i;
 				end if;
 			end if;
 		end if;
 	end process;
+
+	process (reset_n_i, clock_i, clock_en_i)
+	begin
+		if reset_n_i = '0' then
+		elsif rising_edge(clock_i) and clock_en_i = '1' then
+			address_r_s <= address_s;
+		end if;
+	end process;
+
 end;

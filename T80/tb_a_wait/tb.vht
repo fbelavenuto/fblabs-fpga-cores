@@ -36,218 +36,192 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
+use work.t80_pack.all;
 
 entity tb is
 end tb;
 
 architecture testbench of tb is
 
-    -- test target
-    component t80a
-    port(
-        r800_mode_i  : in    std_logic;
-        reset_n_i    : in    std_logic;
-        clock_i      : in    std_logic;
-        clock_en_i   : in    std_logic;
-        address_o    : out   std_logic_vector(15 downto 0);
-        data_i       : in    std_logic_vector(7 downto 0);
-        data_o       : out   std_logic_vector(7 downto 0);
-        wait_n_i     : in    std_logic;
-        int_n_i      : in    std_logic;
-        nmi_n_i      : in    std_logic;
-        m1_n_o       : out   std_logic;
-        mreq_n_o     : out   std_logic;
-        iorq_n_o     : out   std_logic;
-        rd_n_o       : out   std_logic;
-        wr_n_o       : out   std_logic;
-        refresh_n_o  : out   std_logic;
-        halt_n_o     : out   std_logic;
-        busrq_n_i    : in    std_logic;
-        busak_n_o    : out   std_logic
-    );
-    end component;
-
-    signal tb_end             : std_logic := '0';
-    signal clock              : std_logic;                                -- CLOCK
-    signal reset_n            : std_logic;                                -- /RESET
-    signal cpu_wait_n         : std_logic;                                -- /WAIT
-    signal cpu_irq_n          : std_logic;                                -- /IRQ
-    signal cpu_nmi_n          : std_logic;                                -- /NMI
-    signal cpu_busreq_n       : std_logic;                                -- /BUSREQ
-    signal cpu_m1_n           : std_logic;                                -- /M1
-    signal cpu_mreq_n         : std_logic;                                -- /MREQ
-    signal cpu_ioreq_n        : std_logic;                                -- /IOREQ
-    signal cpu_rd_n           : std_logic;                                -- /RD
-    signal cpu_wr_n           : std_logic;                                -- /WR
-    signal cpu_rfsh_n         : std_logic;                                -- /REFRESH
-    signal cpu_halt_n         : std_logic;                                -- /HALT
-    signal cpu_busak_n        : std_logic;                                -- /BUSAK
-    signal cpu_a              : std_logic_vector(15 downto 0);            -- A
-    signal cpu_di             : std_logic_vector(7 downto 0);
-    signal cpu_do             : std_logic_vector(7 downto 0);
-    
+	signal tb_end             : std_logic := '0';
+	signal clock              : std_logic;                                -- CLOCK
+	signal reset_n            : std_logic;                                -- /RESET
+	signal cpu_wait_n         : std_logic;                                -- /WAIT
+	signal cpu_irq_n          : std_logic;                                -- /IRQ
+	signal cpu_nmi_n          : std_logic;                                -- /NMI
+	signal cpu_busreq_n       : std_logic;                                -- /BUSREQ
+	signal cpu_m1_n           : std_logic;                                -- /M1
+	signal cpu_mreq_n         : std_logic;                                -- /MREQ
+	signal cpu_ioreq_n        : std_logic;                                -- /IOREQ
+	signal cpu_rd_n           : std_logic;                                -- /RD
+	signal cpu_wr_n           : std_logic;                                -- /WR
+	signal cpu_rfsh_n         : std_logic;                                -- /REFRESH
+	signal cpu_halt_n         : std_logic;                                -- /HALT
+	signal cpu_busak_n        : std_logic;                                -- /BUSAK
+	signal cpu_a              : std_logic_vector(15 downto 0);            -- A
+	signal cpu_di             : std_logic_vector(7 downto 0);
+	signal cpu_do             : std_logic_vector(7 downto 0);
+	signal texto			: string (1 to 12)				:= "            ";
+	
 begin
 
-    --  instance
-    u_target: t80a
-    port map(
-        r800_mode_i  => '0',
-        reset_n_i    => reset_n,
-        clock_i      => clock,
-        clock_en_i   => '1',
-        address_o    => cpu_a,
-        data_i       => cpu_di,
-        data_o       => cpu_do,
-        wait_n_i     => cpu_wait_n,
-        int_n_i      => cpu_irq_n,
-        nmi_n_i      => cpu_nmi_n,
-        m1_n_o       => cpu_m1_n,
-        mreq_n_o     => cpu_mreq_n,
-        iorq_n_o     => cpu_ioreq_n,
-        rd_n_o       => cpu_rd_n,
-        wr_n_o       => cpu_wr_n,
-        refresh_n_o  => cpu_rfsh_n,
-        halt_n_o     => cpu_halt_n,
-        busrq_n_i    => cpu_busreq_n,
-        busak_n_o    => cpu_busak_n
-    );
+	--  instance
+	u_target: t80a
+	port map(
+		r800_mode_i  => '0',
+		reset_n_i    => reset_n,
+		clock_i      => clock,
+		address_o    => cpu_a,
+		data_i       => cpu_di,
+		data_o       => cpu_do,
+		wait_n_i     => cpu_wait_n,
+		int_n_i      => cpu_irq_n,
+		nmi_n_i      => cpu_nmi_n,
+		m1_n_o       => cpu_m1_n,
+		mreq_n_o     => cpu_mreq_n,
+		iorq_n_o     => cpu_ioreq_n,
+		rd_n_o       => cpu_rd_n,
+		wr_n_o       => cpu_wr_n,
+		refresh_n_o  => cpu_rfsh_n,
+		halt_n_o     => cpu_halt_n,
+		busrq_n_i    => cpu_busreq_n,
+		busak_n_o    => cpu_busak_n
+	);
 
-    -- ----------------------------------------------------- --
-    --  clock generator                                      --
-    -- ----------------------------------------------------- --
-    process
-    begin
-        if tb_end = '1' then
-            wait;
-        end if;
-        clock <= '1';
-        wait for 100 ns;
-        clock <= '0';
-        wait for 100 ns;
-    end process;
+	-- ----------------------------------------------------- --
+	--  clock generator                                      --
+	-- ----------------------------------------------------- --
+	process
+	begin
+		if tb_end = '1' then
+			wait;
+		end if;
+		clock <= '1';
+		wait for 40 ns;
+		clock <= '0';
+		wait for 40 ns;
+	end process;
 
-    --
-    --
-    --
-	process (cpu_a)
-    begin
-        case cpu_a is
-            when X"0000" => cpu_di <= X"21";        -- LD HL, $1000     CYCLE = 10
-            when X"0001" => cpu_di <= X"00";        -- 
-            when X"0002" => cpu_di <= X"10";        -- 
-            when X"0003" => cpu_di <= X"36";        -- LD (HL), $34     CYCLE = 14
-            when X"0004" => cpu_di <= X"34";        -- 
-            when X"0005" => cpu_di <= X"DB";        -- in a,(0)         CYCLE = 24
-            when X"0006" => cpu_di <= X"00";        --
-            when X"0007" => cpu_di <= X"D3";        -- out (0), a       CYCLE = 11
-            when X"0008" => cpu_di <= X"00";        -- 
-            when X"0009" => cpu_di <= X"FB";        -- EI
-            when X"000A" => cpu_di <= X"00";        -- 
-            when X"000B" => cpu_di <= X"00";        -- 
-            when X"000C" => cpu_di <= X"00";        -- 
-            when X"000D" => cpu_di <= X"00";        -- 
+	--
+	--
+	--
+	process (cpu_a, cpu_m1_n, cpu_rfsh_n, cpu_mreq_n, cpu_rd_n)
+	begin
+		if cpu_m1_n='0' or (cpu_rfsh_n = '1' and cpu_mreq_n = '0' and cpu_rd_n = '0') then
+			case cpu_a is
+				when X"0000" => cpu_di <= X"21"; texto <= "LD HL, $1000";	-- CYCLE = 10
+				when X"0001" => cpu_di <= X"00";
+				when X"0002" => cpu_di <= X"10";
+				when X"0003" => cpu_di <= X"36"; texto <= "LD (HL), $34";	-- CYCLE = 14
+				when X"0004" => cpu_di <= X"34";
+				when X"0005" => cpu_di <= X"DB"; texto <= "IN A,(0)    ";	-- CYCLE = 24
+				when X"0006" => cpu_di <= X"00";        --
+				when X"0007" => cpu_di <= X"D3"; texto <= "OUT (0),A   ";	-- CYCLE = 11
+				when X"0008" => cpu_di <= X"00";        -- 
+				when X"0009" => cpu_di <= X"FB"; texto <= "EI          ";	-- CYCLE = ?
+				when X"000A" => cpu_di <= X"00"; texto <= "NOP         ";	-- CYCLE = 8
 
-            when others  => cpu_di <= X"00";        -- NOP              CYCLE = 8
-        end case;
+				when others  => cpu_di <= X"00"; texto <= "NOP         ";	-- CYCLE = 8
+			end case;
+		end if;
+	end process;
 
-    end process;
+	-- ----------------------------------------------------- --
+	--  test bench                                           --
+	-- ----------------------------------------------------- --
+	process
+	begin
+		-- init
+		cpu_wait_n      <= '1';
+		cpu_irq_n       <= '1';
+		cpu_nmi_n       <= '1';
+		cpu_busreq_n    <= '1';
 
-    -- ----------------------------------------------------- --
-    --  test bench                                           --
-    -- ----------------------------------------------------- --
-    process
-    begin
-        -- init
-        cpu_wait_n      <= '1';
-        cpu_irq_n       <= '1';
-        cpu_nmi_n       <= '1';
-        cpu_busreq_n    <= '1';
+		-- reset
+		reset_n    <= '0';
+		wait until( rising_edge(clock) );
+		wait until( rising_edge(clock) );
+		reset_n    <= '1';
+		wait until( rising_edge(clock) );
 
-        -- reset
-        reset_n    <= '0';
-        wait until( rising_edge(clock) );
-        wait until( rising_edge(clock) );
-        reset_n    <= '1';
-        wait until( rising_edge(clock) );
+		wait until( rising_edge(clock) );
 
-        for i in 0 to 1 loop
-            wait until( rising_edge(clock) );
-        end loop;
+		cpu_wait_n <= '0';
+		wait until( rising_edge(clock) );
+		wait until( rising_edge(clock) );
+		wait until( rising_edge(clock) );
+		cpu_wait_n <= '1';
 
-        cpu_wait_n <= '0';
-        wait until( rising_edge(clock) );
-        wait until( rising_edge(clock) );
-        cpu_wait_n <= '1';
+		for i in 0 to 1 loop
+			wait until( rising_edge(clock) );
+		end loop;
 
-        for i in 0 to 1 loop
-            wait until( rising_edge(clock) );
-        end loop;
+		cpu_wait_n <= '0';
+		wait until( rising_edge(clock) );
+		wait until( rising_edge(clock) );
+		wait until( rising_edge(clock) );
+		wait until( rising_edge(clock) );
+		cpu_wait_n <= '1';
 
-        cpu_wait_n <= '0';
-        wait until( rising_edge(clock) );
-        wait until( rising_edge(clock) );
-        wait until( rising_edge(clock) );
-        wait until( rising_edge(clock) );
-        cpu_wait_n <= '1';
+		for i in 0 to 11 loop
+			wait until( rising_edge(clock) );
+		end loop;
 
-        for i in 0 to 12 loop
-            wait until( rising_edge(clock) );
-        end loop;
+		cpu_wait_n <= '0';
+		wait until( rising_edge(clock) );
+		wait until( rising_edge(clock) );
+		wait until( rising_edge(clock) );
+		cpu_wait_n <= '1';
 
-        cpu_wait_n <= '0';
-        wait until( rising_edge(clock) );
-        wait until( rising_edge(clock) );
-        wait until( rising_edge(clock) );
-        cpu_wait_n <= '1';
+		for i in 0 to 8 loop
+			wait until( rising_edge(clock) );
+		end loop;
 
-        for i in 0 to 9 loop
-            wait until( rising_edge(clock) );
-        end loop;
+		cpu_wait_n <= '0';
+		wait until( rising_edge(clock) );
+		wait until( rising_edge(clock) );
+		wait until( rising_edge(clock) );
+		cpu_wait_n <= '1';
 
-        cpu_wait_n <= '0';
-        wait until( rising_edge(clock) );
-        wait until( rising_edge(clock) );
-        cpu_wait_n <= '1';
+		for i in 0 to 10 loop
+			wait until( rising_edge(clock) );
+		end loop;
 
-        for i in 0 to 10 loop
-            wait until( rising_edge(clock) );
-        end loop;
+		cpu_wait_n <= '0';
+		wait until( rising_edge(clock) );
+		wait until( rising_edge(clock) );
+		cpu_wait_n <= '1';
 
-        cpu_wait_n <= '0';
-        wait until( rising_edge(clock) );
-        wait until( rising_edge(clock) );
-        cpu_wait_n <= '1';
-
-        for i in 0 to 7 loop
-            wait until( rising_edge(clock) );
-        end loop;
+		for i in 0 to 7 loop
+			wait until( rising_edge(clock) );
+		end loop;
 
 		cpu_irq_n <= '0';
 		wait until( rising_edge(clock) );
 		wait until( rising_edge(clock) );
-        cpu_wait_n <= '0';
+		cpu_wait_n <= '0';
 		wait until( rising_edge(clock) );
 		cpu_irq_n <= '1';
-        wait until( rising_edge(clock) );
-        cpu_wait_n <= '1';
-        wait until( rising_edge(clock) );
-        cpu_wait_n <= '0';
-        wait until( rising_edge(clock) );
-        wait until( rising_edge(clock) );
-        cpu_wait_n <= '1';
-        wait until( rising_edge(clock) );
-        cpu_wait_n <= '0';
-        wait until( rising_edge(clock) );
-        wait until( rising_edge(clock) );
-        cpu_wait_n <= '1';
+		wait until( rising_edge(clock) );
+		cpu_wait_n <= '1';
+		wait until( rising_edge(clock) );
+		cpu_wait_n <= '0';
+		wait until( rising_edge(clock) );
+		wait until( rising_edge(clock) );
+		cpu_wait_n <= '1';
+		wait until( rising_edge(clock) );
+		cpu_wait_n <= '0';
+		wait until( rising_edge(clock) );
+		wait until( rising_edge(clock) );
+		cpu_wait_n <= '1';
 
-        for i in 0 to 9 loop
-            wait until( rising_edge(clock) );
-        end loop;
+		for i in 0 to 9 loop
+			wait until( rising_edge(clock) );
+		end loop;
 
-        -- wait
-        tb_end <= '1';
-        wait;
-    end process;
+		-- wait
+		tb_end <= '1';
+		wait;
+	end process;
 
 end architecture;

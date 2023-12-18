@@ -93,7 +93,8 @@ entity T80 is
 		Flag_H : integer := 4;
 		Flag_Y : integer := 5;
 		Flag_Z : integer := 6;
-		Flag_S : integer := 7
+		Flag_S : integer := 7;
+		NMOS_g : std_logic := '1'		-- 0 => OUT(C),0     1 => OUT(C),255
 	);
 	port(
 		RESET_n    : in  std_logic;
@@ -120,9 +121,7 @@ entity T80 is
 		IntE       : out std_logic;
 		Stop       : out std_logic;
 		R800_mode  : in  std_logic := '0';
-		out0       : in  std_logic := '0';  -- 0 => OUT(C),0, 1 => OUT(C),255
 		REG        : out std_logic_vector(211 downto 0); -- IFF2, IFF1, IM, IY, HL', DE', BC', IX, HL, DE, BC, PC, SP, R, I, F', A', F, A
-
 		DIRSet     : in  std_logic := '0';
 		DIR        : in  std_logic_vector(211 downto 0) := (others => '0') -- IFF2, IFF1, IM, IY, HL', DE', BC', IX, HL, DE, BC, PC, SP, R, I, F', A', F, A
 	);
@@ -1145,10 +1144,10 @@ begin
 				when "1101" =>
 					BusB <= std_logic_vector(PC(15 downto 8));
 				when "1110" =>
-					if IR = x"71" and out0 = '1' then
-						BusB <= "11111111";
+					if IR = x"71" and NMOS_g = '0' then
+						BusB <= "11111111";						-- CMOS: out (c), 255
 					else
-					BusB <= "00000000";
+						BusB <= "00000000";						-- NMOS: out (c), 0
 					end if;
 				when others =>
 					BusB <= "--------";

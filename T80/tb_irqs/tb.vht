@@ -65,62 +65,35 @@ architecture testbench of tb is
 	
 begin
 
-    --  instance
---    u_target: t80s
---    generic map(
---        Mode    => 0, -- 0 => Z80, 1 => Fast Z80, 2 => 8080, 3 => GB
---        T2Write => 1, -- 0 => WR_n active in T3, /=0 => WR_n active in T2
---        IOWait  => 1  -- 0 => Single cycle I/O, 1 => Std I/O cycle
---    )
---    port map(
---        OUT0        => '0', -- 0 => OUT(C),0, 1 => OUT(C),255
---        RESET_n     => reset_n,
---        CLK         => clock,
---        CEN         => clock_enable,
---        A           => cpu_a,
---        DI          => cpu_di,
---        DO          => cpu_do,
---        WAIT_n      => cpu_wait_n,
---        INT_n       => cpu_irq_n,
---        NMI_n       => cpu_nmi_n,
---        M1_n        => cpu_m1_n,
---        MREQ_n      => cpu_mreq_n,
---        IORQ_n      => cpu_ioreq_n,
---        RD_n        => cpu_rd_n,
---        WR_n        => cpu_wr_n,
---        RFSH_n      => cpu_rfsh_n,
---        HALT_n      => cpu_halt_n,
---        BUSRQ_n     => cpu_busreq_n,
---        BUSAK_n     => cpu_busak_n
---    );
-
-    --  instance
-    u_target: t80se
-    generic map(
-        Mode    => 0, -- 0 => Z80, 1 => Fast Z80, 2 => 8080, 3 => GB
-        T2Write => 1, -- 0 => WR_n active in T3, /=0 => WR_n active in T2
-        IOWait  => 1  -- 0 => Single cycle I/O, 1 => Std I/O cycle
-    )
-    port map(
-        RESET_n     => reset_n,
-        CLK_n       => clock,
-        CLKEN       => clock_enable,
-        A           => cpu_a,
-        DI          => cpu_di,
-        DO          => cpu_do,
-        WAIT_n      => cpu_wait_n,
-        INT_n       => cpu_irq_n,
-        NMI_n       => cpu_nmi_n,
-        M1_n        => cpu_m1_n,
-        MREQ_n      => cpu_mreq_n,
-        IORQ_n      => cpu_ioreq_n,
-        RD_n        => cpu_rd_n,
-        WR_n        => cpu_wr_n,
-        RFSH_n      => cpu_rfsh_n,
-        HALT_n      => cpu_halt_n,
-        BUSRQ_n     => cpu_busreq_n,
-        BUSAK_n     => cpu_busak_n
-    );
+	--  instance
+	u_target: t80s
+	generic map(
+		mode_g      => 0, -- 0 => Z80, 1 => Fast Z80, 2 => 8080, 3 => GB
+		t2write_g   => 1, -- 0 => WR_n active in T3, /=0 => WR_n active in T2
+		iowait_g    => 1,  -- 0 => Single cycle I/O, 1 => Std I/O cycle
+		nmos_g      => '1'
+	)
+	port map(
+		r800_mode_i	=> '0',
+		reset_n_i	=> reset_n,
+		clock_i		=> clock,
+		clock_en_i	=> clock_enable,
+		address_o	=> cpu_a,
+		data_i		=> cpu_di,
+		data_o		=> cpu_do,
+		wait_n_i	=> cpu_wait_n,
+		int_n_i		=> cpu_irq_n,
+		nmi_n_i		=> cpu_nmi_n,
+		m1_n_o		=> cpu_m1_n,
+		mreq_n_o	=> cpu_mreq_n,
+		iorq_n_o	=> cpu_ioreq_n,
+		rd_n_o		=> cpu_rd_n,
+		wr_n_o		=> cpu_wr_n,
+		refresh_n_o	=> cpu_rfsh_n,
+		halt_n_o	=> cpu_halt_n,
+		busrq_n_i	=> cpu_busreq_n,
+		busak_n_o	=> cpu_busak_n
+	);
 
 	-- ----------------------------------------------------- --
 	--  clock generator                                      --
