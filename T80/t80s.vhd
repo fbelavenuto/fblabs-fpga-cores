@@ -169,49 +169,56 @@ begin
 	process (reset_n_i, clock_i)
 	begin
 		if reset_n_i = '0' then
+			mreq_n_s <= '1';
+			iorq_n_s <= '1';
 			rd_n_s <= '1';
 			wr_n_s <= '1';
-			iorq_n_s <= '1';
-			mreq_n_s <= '1';
-			data_r_s <= "00000000";
 		elsif rising_edge(clock_i) then
-			if clock_en_i = '1' then
-				rd_n_s <= '1';
-				wr_n_s <= '1';
-				iorq_n_s <= '1';
-				mreq_n_s <= '1';
-				if mcycle_s = 1 then
-					if tstate_s = 1 or (tstate_s = 2 and wait_n_i = '0') then
-						rd_n_s <= not intcycle_n_s;
-						mreq_n_s <= not intcycle_n_s;
-						iorq_n_s <= intcycle_n_s;
-					end if;
-					if tstate_s = 3 then
-						mreq_n_s <= '0';
+			mreq_n_s <= '1';
+			iorq_n_s <= '1';
+			rd_n_s <= '1';
+			wr_n_s <= '1';
+			if mcycle_s = 1 then
+				if tstate_s = 1 or (tstate_s = 2 and clock_en_i = '0')  then
+					mreq_n_s <= not intcycle_n_s;
+					iorq_n_s <= intcycle_n_s;
+					rd_n_s <= not intcycle_n_s;
+				end if;
+				if tstate_s = 3  then
+					mreq_n_s <= '0';
+				end if;
+			else
+				if (tstate_s = 1 or (tstate_s = 2 and clock_en_i = '0')) and noread_s = '0' and write_s = '0' then
+					mreq_n_s <= iorq_s;
+					iorq_n_s <= not iorq_s;
+					rd_n_s <= '0';
+				end if;
+				if t2write_g = 0 then
+					if tstate_s = 2 and write_s = '1' then
+						mreq_n_s <= iorq_s;
+						iorq_n_s <= not iorq_s;
+						wr_n_s <= '0';
 					end if;
 				else
-					if (tstate_s = 1 or (tstate_s = 2 and wait_n_i = '0')) and noread_s = '0' and write_s = '0' then
-						rd_n_s <= '0';
-						iorq_n_s <= not iorq_s;
+					if (tstate_s = 1 or (tstate_s = 2 and clock_en_i = '0')) and write_s = '1' then
 						mreq_n_s <= iorq_s;
-					end if;
-					if t2write_g = 0 then
-						if tstate_s = 2 and write_s = '1' then
-							wr_n_s <= '0';
-							iorq_n_s <= not iorq_s;
-							mreq_n_s <= iorq_s;
-						end if;
-					else
-						if (tstate_s = 1 or (tstate_s = 2 and wait_n_i = '0')) and write_s = '1' then
-							wr_n_s <= '0';
-							iorq_n_s <= not iorq_s;
-							mreq_n_s <= iorq_s;
-						end if;
+						iorq_n_s <= not iorq_s;
+						wr_n_s <= '0';
 					end if;
 				end if;
-				if tstate_s = 2 and wait_n_i = '1' then
-					data_r_s <= data_i;
-				end if;
+			end if;
+
+
+		end if;
+	end process;
+		
+	process (reset_n_i, clock_i, clock_en_i)
+	begin
+		if reset_n_i = '0' then
+			data_r_s <= "00000000";
+		elsif rising_edge(clock_i) and clock_en_i = '1' then
+			if tstate_s = 2 and wait_n_i = '1' then
+				data_r_s <= data_i;
 			end if;
 		end if;
 	end process;
