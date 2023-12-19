@@ -45,7 +45,7 @@ architecture testbench of tb is
 
 	signal tb_end			: std_logic := '0';
 	signal clock			: std_logic;                                -- CLOCK
-	signal cnt1_q			: std_logic_vector(2 downto 0)	:= (others => '0');
+	signal cnt1_q			: std_logic_vector(1 downto 0)	:= (others => '0');
 	signal clock_enable		: std_logic	:= '0';
 	signal reset_n			: std_logic;                                -- /RESET
 	signal cpu_wait_n		: std_logic;                                -- /WAIT
@@ -117,7 +117,7 @@ begin
 			clock_enable <= '0';
 			if cnt1_q = 0 then
 				clock_enable <= '1';
-				cnt1_q <= "101";
+				cnt1_q <= "11";
 			else
 				cnt1_q <= cnt1_q - 1;
 			end if;

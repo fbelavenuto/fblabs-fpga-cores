@@ -36,10 +36,10 @@ configure wave -snapdistance 10
 configure wave -datasetprefix 0
 configure wave -rowmargin 4
 configure wave -childrowmargin 2
-configure wave -gridoffset 0
-configure wave -gridperiod 120
-configure wave -griddelta 20
-configure wave -timeline 0
+configure wave -gridoffset 80
+configure wave -gridperiod 160
+configure wave -griddelta 5
+configure wave -timeline 1
 configure wave -timelineunits ns
 update
 WaveRestoreZoom {0 ns} {14864 ns}
