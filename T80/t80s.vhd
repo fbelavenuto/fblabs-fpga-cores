@@ -111,7 +111,6 @@ architecture rtl of T80s is
 	signal write_s		: std_logic;
 	signal iorq_s		: std_logic;
 	signal address_s	: std_logic_vector(15 downto 0);
-	signal address_r_s	: std_logic_vector(15 downto 0);
 	signal data_out_s	: std_logic_vector( 7 downto 0);
 	signal data_r_s		: std_logic_vector(7 downto 0);
 	signal mcycle_s		: std_logic_vector(2 downto 0);
@@ -132,9 +131,9 @@ begin
 	mreq_n_o    <= mreq_n_s and mreq_a_s	when busak_n_s = '1' else 'Z';
 	iorq_n_o    <= iorq_n_s and iorq_a_s	when busak_n_s = '1' else 'Z';
 	rd_n_o      <= rd_n_s and rd_a_s		when busak_n_s = '1' else 'Z';
-	wr_n_o      <= wr_n_s and wr_a_s		when busak_n_s = '1' else 'Z';
+	wr_n_o      <= wr_n_s 					when busak_n_s = '1' else 'Z';
 	refresh_n_o <= rfsh_n_s					when busak_n_s = '1' else 'Z';
-	address_o   <= address_r_s				when busak_n_s = '1' else (others => 'Z');
+	address_o   <= address_s				when busak_n_s = '1' else (others => 'Z');
 	data_o      <= data_out_s				when busak_n_s = '1' else (others => 'Z');
 	busak_n_o   <= busak_n_s;
 
@@ -169,21 +168,18 @@ begin
 		IntCycle_n	=> intcycle_n_s
 	);
 
-	mreq_a_s	<= not intcycle_n_s		when	mcycle_s = 1 and tstate_s = 1 and clock_en_i = '0'						else
-				   iorq_s				when	tstate_s = 1 and clock_en_i = '0' and noread_s = '0' and write_s = '0'	else
-				   iorq_s				when	tstate_s = 1 and clock_en_i = '0' and write_s = '1'						else
+	mreq_a_s	<= not intcycle_n_s		when	mcycle_s = 1 and tstate_s = 1						else
+				   iorq_s				when	tstate_s = 1 and noread_s = '0' and write_s = '0'	else
+--				   iorq_s				when	tstate_s = 1 and write_s = '1'						else
 				   '1';
 
-	iorq_a_s	<= intcycle_n_s			when	mcycle_s = 1 and tstate_s = 1 and clock_en_i = '0'	else
-				   not iorq_s			when	tstate_s = 1 and clock_en_i = '0' and noread_s = '0' and write_s = '0'	else
-				   not iorq_s			when	tstate_s = 1 and clock_en_i = '0' and write_s = '1'						else
+	iorq_a_s	<= intcycle_n_s			when	mcycle_s = 1 and tstate_s = 1						else
+				   not iorq_s			when	tstate_s = 1 and noread_s = '0' and write_s = '0'	else
+--				   not iorq_s			when	tstate_s = 1 and write_s = '1'						else
 				   '1';
 				
-	rd_a_s		<= not intcycle_n_s		when	mcycle_s = 1 and tstate_s = 1 and clock_en_i = '0'	else
-				   '0'					when	tstate_s = 1 and clock_en_i = '0' and noread_s = '0' and write_s = '0'	else
-				   '1';
-
-	wr_a_s		<= '0'					when	tstate_s = 1 and clock_en_i = '0' and write_s = '1'	else
+	rd_a_s		<= not intcycle_n_s		when	mcycle_s = 1 and tstate_s = 1						else
+				   '0'					when	tstate_s = 1 and noread_s = '0' and write_s = '0'	else
 				   '1';
 
 	process (reset_n_i, clock_i, clock_en_i)
@@ -223,15 +219,6 @@ begin
 			if tstate_s = 2 and wait_n_i = '1' then
 				data_r_s <= data_i;
 			end if;
-		end if;
-	end process;
-
-	process (reset_n_i, clock_i, clock_en_i)
-	begin
-		if reset_n_i = '0' then
-			address_r_s <= (others => '0');
-		elsif rising_edge(clock_i) and clock_en_i = '1' then
-			address_r_s <= address_s;
 		end if;
 	end process;
 
