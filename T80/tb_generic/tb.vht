@@ -70,7 +70,6 @@ begin
 	u_target: t80s
 	generic map(
 		mode_g      => 0, -- 0 => Z80, 1 => Fast Z80, 2 => 8080, 3 => GB
-		t2write_g   => 1, -- 0 => WR_n active in T3, /=0 => WR_n active in T2
 		iowait_g    => 1,  -- 0 => Single cycle I/O, 1 => Std I/O cycle
 		nmos_g      => '1'
 	)
@@ -127,31 +126,28 @@ begin
 	--
 	process (cpu_a, cpu_m1_n, cpu_rfsh_n, cpu_mreq_n, cpu_rd_n)
 	begin
-		if cpu_m1_n='0' or (cpu_rfsh_n = '1' and cpu_mreq_n = '0' and cpu_rd_n = '0') then
-			case cpu_a is
-				when X"0000" => cpu_di <= X"21"; texto <= "LD HL, $1000";	-- CYCLE = 10
-				when X"0001" => cpu_di <= X"00";
-				when X"0002" => cpu_di <= X"10";
-				when X"0003" => cpu_di <= X"11"; texto <= "LD DE, $0000";	-- CYCLE = 10
-				when X"0004" => cpu_di <= X"00";
-				when X"0005" => cpu_di <= X"00";
-				when X"0006" => cpu_di <= X"01"; texto <= "LD BC, $FFFF";	-- CYCLE = 10
-				when X"0007" => cpu_di <= X"FF";
-				when X"0008" => cpu_di <= X"FF";
-				when X"0009" => cpu_di <= X"36"; texto <= "LD (HL), $34";	-- CYCLE = 14
-				when X"000A" => cpu_di <= X"34";
-				when X"000B" => cpu_di <= X"DB"; texto <= "IN A,(0)    ";	-- CYCLE = 24
-				when X"000C" => cpu_di <= X"00";
-				when X"000D" => cpu_di <= X"D3"; texto <= "OUT (0), A  ";	-- CYCLE = 11
-				when X"000E" => cpu_di <= X"00";
-				when X"000F" => cpu_di <= X"ED"; texto <= "LDI         ";	-- CYCLE = 16
-				when X"0010" => cpu_di <= X"A0"; texto <= "LDI         ";
-				when X"0011" => cpu_di <= X"ED"; texto <= "LDI         ";	-- CYCLE = 16
-				when X"0012" => cpu_di <= X"A0"; texto <= "LDI         ";
+		case cpu_a is
+			when X"0000" => cpu_di <= X"21"; if cpu_m1_n='0' then texto <= "LD HL, $1000"; end if;	-- CYCLE = 10
+			when X"0001" => cpu_di <= X"00";
+			when X"0002" => cpu_di <= X"10";
+			when X"0003" => cpu_di <= X"36"; if cpu_m1_n='0' then texto <= "LD (HL), $34"; end if;	-- CYCLE = 14
+			when X"0004" => cpu_di <= X"34";
+			when X"0005" => cpu_di <= X"DB"; if cpu_m1_n='0' then texto <= "IN A,(0)    "; end if;	-- CYCLE = 24
+			when X"0006" => cpu_di <= X"00";
+			when X"0007" => cpu_di <= X"D3"; if cpu_m1_n='0' then texto <= "OUT (0), A  "; end if;	-- CYCLE = 11
+			when X"0008" => cpu_di <= X"00";
+			when X"0009" => cpu_di <= X"21"; if cpu_m1_n='0' then texto <= "LD HL, $1000"; end if;	-- CYCLE = 10
+			when X"000A" => cpu_di <= X"00";
+			when X"000B" => cpu_di <= X"10";
+			when X"000C" => cpu_di <= X"36"; if cpu_m1_n='0' then texto <= "LD (HL), $34"; end if;	-- CYCLE = 14
+			when X"000D" => cpu_di <= X"34";
+			when X"000E" => cpu_di <= X"DB"; if cpu_m1_n='0' then texto <= "IN A,(0)    "; end if;	-- CYCLE = 24
+			when X"000F" => cpu_di <= X"00";
+			when X"0010" => cpu_di <= X"D3"; if cpu_m1_n='0' then texto <= "OUT (0), A  "; end if;	-- CYCLE = 11
+			when X"0011" => cpu_di <= X"00";
 
-				when others  => cpu_di <= X"00"; texto <= "NOP         ";	-- CYCLE = 8
-			end case;
-		end if;
+			when others  => cpu_di <= X"00"; if cpu_m1_n='0' then texto <= "NOP         "; end if;	-- CYCLE = 8
+		end case;
 	end process;
 
 	-- ----------------------------------------------------- --
@@ -172,9 +168,54 @@ begin
 		reset_n    <= '1';
 		wait until( rising_edge(clock_enable) );
 
-		for i in 0 to 95 loop
+		for i in 0 to 41 loop
 			wait until( rising_edge(clock_enable) );
 		end loop;
+
+        cpu_wait_n <= '0';
+        wait until( rising_edge(clock_enable) );
+        wait until( rising_edge(clock_enable) );
+        cpu_wait_n <= '1';
+
+        for i in 0 to 2 loop
+            wait until( rising_edge(clock_enable) );
+        end loop;
+
+        cpu_wait_n <= '0';
+        wait until( rising_edge(clock_enable) );
+        wait until( rising_edge(clock_enable) );
+        wait until( rising_edge(clock_enable) );
+        cpu_wait_n <= '1';
+
+        for i in 0 to 12 loop
+            wait until( rising_edge(clock_enable) );
+        end loop;
+
+        cpu_wait_n <= '0';
+        wait until( rising_edge(clock_enable) );
+        wait until( rising_edge(clock_enable) );
+        wait until( rising_edge(clock_enable) );
+        cpu_wait_n <= '1';
+
+        for i in 0 to 9 loop
+            wait until( rising_edge(clock_enable) );
+        end loop;
+
+        cpu_wait_n <= '0';
+        wait until( rising_edge(clock_enable) );
+        wait until( rising_edge(clock_enable) );
+        cpu_wait_n <= '1';
+
+        for i in 0 to 10 loop
+            wait until( rising_edge(clock_enable) );
+        end loop;
+
+        cpu_wait_n <= '0';
+        wait until( rising_edge(clock_enable) );
+        wait until( rising_edge(clock_enable) );
+        cpu_wait_n <= '1';
+
+
 
 		cpu_busreq_n <= '0';
 		wait until( rising_edge(clock_enable) );

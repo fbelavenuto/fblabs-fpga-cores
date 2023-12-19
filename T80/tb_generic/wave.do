@@ -22,6 +22,9 @@ add wave -noupdate /tb/cpu_nmi_n
 add wave -noupdate /tb/cpu_busreq_n
 add wave -noupdate /tb/cpu_halt_n
 add wave -noupdate /tb/cpu_busak_n
+add wave -noupdate /tb/u_target/noread_s
+add wave -noupdate /tb/u_target/write_s
+add wave -noupdate /tb/u_target/intcycle_n_s
 TreeUpdate [SetDefaultTree]
 WaveRestoreCursors {{Cursor 1} {240 ns} 0}
 quietly wave cursor active 1
@@ -39,4 +42,4 @@ configure wave -griddelta 20
 configure wave -timeline 0
 configure wave -timelineunits ns
 update
-WaveRestoreZoom {0 ns} {6568 ns}
+WaveRestoreZoom {0 ns} {14864 ns}

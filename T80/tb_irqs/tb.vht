@@ -62,6 +62,7 @@ architecture testbench of tb is
 	signal cpu_a			: std_logic_vector(15 downto 0);		-- A
 	signal cpu_di			: std_logic_vector(7 downto 0);
 	signal cpu_do			: std_logic_vector(7 downto 0);
+	signal texto			: string (1 to 12)				:= "            ";
 	
 begin
 
@@ -69,7 +70,6 @@ begin
 	u_target: t80s
 	generic map(
 		mode_g      => 0, -- 0 => Z80, 1 => Fast Z80, 2 => 8080, 3 => GB
-		t2write_g   => 1, -- 0 => WR_n active in T3, /=0 => WR_n active in T2
 		iowait_g    => 1,  -- 0 => Single cycle I/O, 1 => Std I/O cycle
 		nmos_g      => '1'
 	)
@@ -125,33 +125,33 @@ begin
 	--
 	process (cpu_m1_n, cpu_rd_n, cpu_mreq_n, cpu_ioreq_n, cpu_a)
 	begin
-		if cpu_rd_n = '0' and (cpu_mreq_n = '0' or cpu_ioreq_n = '0') then
+		if cpu_m1_n = '0' and cpu_ioreq_n = '0' then
+			cpu_di <= X"F1";	-- IM 0 (Opcode F1 = pop af) and IM 2 (low addres F1)
+		elsif cpu_m1_n='0' or (cpu_rd_n = '0' and (cpu_mreq_n = '0' or cpu_ioreq_n = '0')) then
 			case cpu_a is
-				when X"0000" => cpu_di <= X"ED";		-- IM 2
+				when X"0000" => cpu_di <= X"ED"; if cpu_m1_n='0' then texto <= "IM 2        "; end if;		-- IM 2
 				when X"0001" => cpu_di <= X"5E";		--
-				when X"0002" => cpu_di <= X"FB";		-- EI
-				when X"0003" => cpu_di <= X"00";		-- NOP
-				when X"0004" => cpu_di <= X"00";		-- NOP
-				when X"0005" => cpu_di <= X"ED";		-- IM 1
+				when X"0002" => cpu_di <= X"FB"; if cpu_m1_n='0' then texto <= "EI          "; end if;		-- EI
+				when X"0003" => cpu_di <= X"00"; if cpu_m1_n='0' then texto <= "NOP         "; end if;		-- NOP
+				when X"0004" => cpu_di <= X"00"; if cpu_m1_n='0' then texto <= "NOP         "; end if;		-- NOP
+				when X"0005" => cpu_di <= X"ED"; if cpu_m1_n='0' then texto <= "IM 1        "; end if;		-- IM 1
 				when X"0006" => cpu_di <= X"56";		--
-				when X"0007" => cpu_di <= X"FB";		-- EI
+				when X"0007" => cpu_di <= X"FB"; if cpu_m1_n='0' then texto <= "EI          "; end if;		-- EI
 				when X"0008" => cpu_di <= X"00";		--
 				when X"0009" => cpu_di <= X"00";		-- 
 
-				when X"0038" => cpu_di <= X"ED";		-- IM 0
+				when X"0038" => cpu_di <= X"ED"; if cpu_m1_n='0' then texto <= "IM 0        "; end if;		-- IM 0
 				when X"0039" => cpu_di <= X"46";		-- 
-				when X"003A" => cpu_di <= X"FB";		-- EI
-				when X"003B" => cpu_di <= X"00";		-- NOP
-				when X"003C" => cpu_di <= X"00";		-- NOP
-				when X"003D" => cpu_di <= X"00";		-- NOP
+				when X"003A" => cpu_di <= X"FB"; if cpu_m1_n='0' then texto <= "EI          "; end if;		-- EI
+				when X"003B" => cpu_di <= X"00"; if cpu_m1_n='0' then texto <= "NOP         "; end if;		-- NOP
+				when X"003C" => cpu_di <= X"00"; if cpu_m1_n='0' then texto <= "NOP         "; end if;		-- NOP
+				when X"003D" => cpu_di <= X"00"; if cpu_m1_n='0' then texto <= "NOP         "; end if;		-- NOP
 
 				when X"00F1" => cpu_di <= X"05";		-- 
 				when X"00F2" => cpu_di <= X"00";		-- 
 
-				when others  => cpu_di <= X"00";		-- NOP
+				when others  => cpu_di <= X"00"; if cpu_m1_n='0' then texto <= "NOP         "; end if;		-- NOP
 			end case;
-		elsif cpu_m1_n = '0' and cpu_ioreq_n = '0' then
-			cpu_di <= X"F1";	-- IM 0 (Opcode F1 = pop af) and IM 2 (low addres F1)
 		else
 			cpu_di <= (others => 'Z');
 		end if;
