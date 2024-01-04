@@ -84,8 +84,8 @@ use work.T80_Pack.all;
 
 entity T80 is
 	generic(
-		Mode   : integer := 0;  -- 0 => Z80, 1 => Fast Z80, 2 => 8080, 3 => GB
-		IOWait : integer := 0;  -- 0 => Single cycle I/O, 1 => Std I/O cycle
+		Mode   : integer := 0;		-- 0 => Z80, 1 => Fast Z80, 2 => 8080, 3 => GB
+		IOWait : integer := 0;		-- 0 => Single cycle I/O, 1 => Std I/O cycle
 		Flag_C : integer := 0;
 		Flag_N : integer := 1;
 		Flag_P : integer := 2;
@@ -94,7 +94,7 @@ entity T80 is
 		Flag_Y : integer := 5;
 		Flag_Z : integer := 6;
 		Flag_S : integer := 7;
-		NMOS_g : std_logic := '1'		-- 0 => OUT(C),0     1 => OUT(C),255
+		NMOS_g : boolean := true	-- false => OUT(C),255; true => OUT(C),0
 	);
 	port(
 		RESET_n    : in  std_logic;
@@ -271,7 +271,7 @@ begin
 			 else IntE_FF2 & IntE_FF1 & IStatus & DOR(127 downto 112) & DOR(47 downto 0) & DOR(63 downto 48) & DOR(111 downto 64) &
 						std_logic_vector(PC) & std_logic_vector(SP) & std_logic_vector(R) & I & Fp & Ap & F & ACC;
 
-	mcode : T80_MCode
+	mcode : entity work.T80_MCode
 		generic map(
 			Mode   => Mode,
 			Flag_C => Flag_C,
@@ -347,7 +347,7 @@ begin
 			No_PC       => No_PC,
 			XYbit_undoc => XYbit_undoc);
 
-	alu : T80_ALU
+	alu : entity work.T80_ALU
 		generic map(
 			Mode   => Mode,
 			Flag_C => Flag_C,
@@ -1090,7 +1090,7 @@ begin
 		end if;
 	end process;
 
-	Regs : T80_Reg
+	Regs : entity work.T80_Reg
 		port map(
 			Clk => CLK_n,
 			CEN => ClkEn,
@@ -1144,7 +1144,7 @@ begin
 				when "1101" =>
 					BusB <= std_logic_vector(PC(15 downto 8));
 				when "1110" =>
-					if IR = x"71" and NMOS_g = '0' then
+					if IR = x"71" and not NMOS_g then
 						BusB <= "11111111";						-- CMOS: out (c), 255
 					else
 						BusB <= "00000000";						-- NMOS: out (c), 0
