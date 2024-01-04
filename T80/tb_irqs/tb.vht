@@ -68,11 +68,11 @@ architecture testbench of tb is
 begin
 
 	--  instance
-	u_target: t80s
+	u_target: entity work.t80s
 	generic map(
 		mode_g      => 0, -- 0 => Z80, 1 => Fast Z80, 2 => 8080, 3 => GB
 		iowait_g    => 1,  -- 0 => Single cycle I/O, 1 => Std I/O cycle
-		nmos_g      => '1'
+		nmos_g      => true
 	)
 	port map(
 		r800_mode_i	=> '0',
@@ -99,7 +99,7 @@ begin
 	-- ----------------------------------------------------- --
 	--  clock generator                                      --
 	-- ----------------------------------------------------- --
-    process
+    clock_gen: process
     begin
         if tb_end = '1' then
             wait;
@@ -111,7 +111,7 @@ begin
     end process;
 
 	-- clock enable
-	process (clock)
+	clock_en: process (clock)
 	begin
 		if rising_edge(clock) then
 			clock_enable <= '0';
@@ -127,7 +127,7 @@ begin
 	--
 	--
 	--
-	process (cpu_m1_n, cpu_rd_n, cpu_mreq_n, cpu_ioreq_n, cpu_a)
+	cpudi: process (cpu_m1_n, cpu_rd_n, cpu_mreq_n, cpu_ioreq_n, cpu_a)
 	begin
 		if cpu_m1_n = '0' and cpu_ioreq_n = '0' then
 			cpu_di <= X"F1";	-- IM 0 (Opcode F1 = pop af) and IM 2 (low addres F1)
@@ -165,7 +165,7 @@ begin
 	-- ----------------------------------------------------- --
 	--  test bench                                           --
 	-- ----------------------------------------------------- --
-	process
+	testbench: process
 	begin
 		-- init
 		cpu_wait_n		<= '1';

@@ -2,3 +2,5 @@ transcript
 vsim.wlf
 work
 *.bak
+*.bmp
+*.png

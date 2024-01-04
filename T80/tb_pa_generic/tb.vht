@@ -73,7 +73,7 @@ begin
 	u_target: entity work.t80pa
 	generic map(
 		mode_g      => 0, 	-- 0 => Z80, 1 => Fast Z80, 2 => 8080, 3 => GB
-		nmos_g		=> '1'
+		nmos_g		=> true
 	)
 	port map(
 		r800_mode_i		=> '0',
@@ -101,7 +101,7 @@ begin
 	-- ----------------------------------------------------- --
 	--  clock generator                                      --
 	-- ----------------------------------------------------- --
-	process
+	clock_gen: process
 	begin
 		if tb_end = '1' then
 			wait;
@@ -113,7 +113,7 @@ begin
 	end process;
 
 	-- clock enable 10MHz
-	process (clock)
+	clock_en_10: process (clock)
 	begin
 		if rising_edge(clock) then
 			clock_enable_10m_s <= not clock_enable_10m_s;
@@ -121,7 +121,7 @@ begin
 	end process;
 
 	-- clocks enable CPU
-	process (clock, reset_n, clock_enable_10m_s)
+	clock_en_cpu: process (clock, reset_n, clock_enable_10m_s)
 	begin
 		if reset_n = '0' then
 			cnt1_q	<= (others => '0');
@@ -140,7 +140,7 @@ begin
 	--
 	--
 	--
-	process (cpu_a, cpu_m1_n, cpu_rfsh_n, cpu_mreq_n, cpu_rd_n)
+	cpudi: process (cpu_a, cpu_m1_n, cpu_rfsh_n, cpu_mreq_n, cpu_rd_n)
 	begin
 		case cpu_a is
 			when X"0000" => cpu_di <= X"21"; if cpu_m1_n='0' then texto <= "LD HL, $1000"; end if;	-- CYCLE = 10
@@ -169,7 +169,7 @@ begin
 	-- ----------------------------------------------------- --
 	--  test bench                                           --
 	-- ----------------------------------------------------- --
-	process
+	testbench: process
 	begin
 		-- init
 		cpu_wait_n      <= '1';

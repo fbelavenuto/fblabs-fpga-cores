@@ -66,7 +66,7 @@ architecture testbench of tb is
 begin
 
 	--  instance
-	u_target: t80a
+	u_target: entity work.t80a
 	port map(
 		r800_mode_i  => '0',
 		reset_n_i    => reset_n,
@@ -91,7 +91,7 @@ begin
 	-- ----------------------------------------------------- --
 	--  clock generator                                      --
 	-- ----------------------------------------------------- --
-	process
+	clock_gen: process
 	begin
 		if tb_end = '1' then
 			wait;
@@ -105,7 +105,7 @@ begin
 	--
 	--
 	--
-	process (cpu_a, cpu_m1_n, cpu_rfsh_n, cpu_mreq_n, cpu_rd_n)
+	cpudi: process (cpu_a, cpu_m1_n, cpu_rfsh_n, cpu_mreq_n, cpu_rd_n)
 	begin
 		if cpu_m1_n='0' or (cpu_rfsh_n = '1' and cpu_mreq_n = '0' and cpu_rd_n = '0') then
 			case cpu_a is
@@ -129,7 +129,7 @@ begin
 	-- ----------------------------------------------------- --
 	--  test bench                                           --
 	-- ----------------------------------------------------- --
-	process
+	testbench: process
 	begin
 		-- init
 		cpu_wait_n      <= '1';
