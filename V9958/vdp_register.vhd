@@ -87,6 +87,9 @@ LIBRARY IEEE;
     USE WORK.VDP_PACKAGE.ALL;
 
 ENTITY VDP_REGISTER IS
+	generic (
+		start_on_g		: boolean		:= false	-- false = VDP starts off, true = VDP start showing video
+	);
     PORT(
         RESET                       : IN    STD_LOGIC;
         CLK21M                      : IN    STD_LOGIC;
@@ -97,6 +100,7 @@ ENTITY VDP_REGISTER IS
         ADR                         : IN    STD_LOGIC_VECTOR( 15 DOWNTO 0 );
         DBI                         : OUT   STD_LOGIC_VECTOR(  7 DOWNTO 0 );
         DBO                         : IN    STD_LOGIC_VECTOR(  7 DOWNTO 0 );
+        wait_n_o                    : out   std_logic;
 
         DOTSTATE                    : IN    STD_LOGIC_VECTOR(  1 DOWNTO 0 );
 
@@ -244,7 +248,11 @@ ARCHITECTURE RTL OF VDP_REGISTER IS
 
     SIGNAL W_EVEN_DOTSTATE          : STD_LOGIC;
     SIGNAL W_IS_BITMAP_MODE         : STD_LOGIC;
+
+    signal wait_n_s                 : std_logic                         := '1';
+
 BEGIN
+
     ACK                     <= FF_ACK;
     SPVDPS0RESETREQ         <= FF_SPVDPS0RESETREQ;
 
@@ -530,6 +538,14 @@ BEGIN
             PALETTEDATAG_IN         <= (OTHERS => '0');
             FF_PALETTE_WR_REQ       <= '0';
             PALETTEWRNUM            <= (OTHERS => '0');
+
+            if start_on_g then
+                FF_R1_DISP_ON       <= '1';                 -- Display ON
+                FF_R2_PT_NAM_ADDR   <= "0000010";           -- ?
+                REG_R10R3_COL_ADDR(7 downto 0)  <= X"2C";   -- ?
+                REG_R7_FRAME_COL    <= X"F7";               -- ?
+			end if;
+
         ELSIF( CLK21M'EVENT AND CLK21M = '1' )THEN
             IF (REQ = '1' AND WRT = '0') THEN
                 -- READ REQUEST
@@ -558,8 +574,13 @@ BEGIN
                 -- WRITE REQUEST
                 CASE ADR(1 DOWNTO 0) IS
                     WHEN "00"       => -- PORT#0 (0x98): WRITE VRAM
-                        VDPVRAMACCESSDATA <= DBO;
-                        VDPVRAMWRREQ <= NOT VDPVRAMWRACK;
+--                        IF VDPVRAMWRREQ /= VDPVRAMWRACK then
+--                            wait_n_s    <= '0';
+--                        else
+                            VDPVRAMACCESSDATA <= DBO;
+                            VDPVRAMWRREQ <= NOT VDPVRAMWRACK;
+                            wait_n_s    <= '1';
+--                        end if;
 
                     WHEN "01"       => -- PORT#1 (0x99): REGISTER WRITE OR VRAM ADDR SETUP
                         IF(VDPP1IS1STBYTE = '1') THEN
@@ -709,4 +730,7 @@ BEGIN
 
         END IF;
     END PROCESS;
+
+    wait_n_o    <= wait_n_s;
+
 END RTL;

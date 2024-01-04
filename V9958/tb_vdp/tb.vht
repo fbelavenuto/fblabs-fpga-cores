@@ -61,7 +61,7 @@ architecture testbench of tb is
 	signal int_n_s				: std_logic;
 	signal data_i_s				: std_logic_vector( 7 downto 0);
 	signal data_o_s				: std_logic_vector( 7 downto 0);
-	signal wait_s				: std_logic;
+	signal wait_n_s				: std_logic;
 	signal vram_oe_n_s			: std_logic;
 	signal vram_we_n_s			: std_logic;
 	signal vram_addr_s			: std_logic_vector(16 downto 0);	-- 128K
@@ -95,6 +95,9 @@ architecture testbench of tb is
 		wait until rising_edge(clock_s);
 		req_s		<= '1';
 		wait until rising_edge(clock_s);
+		if wait_n_s = '0' then
+			wait until wait_n_s='1';
+		end if;
 		req_s		<= '0';
 		wait until rising_edge(clock_s);
 		wait until rising_edge(clock_s);
@@ -130,6 +133,9 @@ begin
 	addr_s <= "00000000000000" & mode_s;
 	
 	u_target: entity work.vdp
+	generic map (
+		start_on_g			=> true
+	)
 	port map (
         CLK21M              => clock_s,				-- : IN    STD_LOGIC;
         RESET               => reset_s,				-- : IN    STD_LOGIC;
@@ -139,6 +145,7 @@ begin
         ADR                 => addr_s,				-- : IN    STD_LOGIC_VECTOR( 15 DOWNTO 0 );
         DBI                 => data_o_s,			-- : OUT   STD_LOGIC_VECTOR(  7 DOWNTO 0 );
         DBO                 => data_i_s,			-- : IN    STD_LOGIC_VECTOR(  7 DOWNTO 0 );
+		wait_n_o			=> wait_n_s,
         INT_N               => int_n_s,				-- : OUT   STD_LOGIC;
         PRAMOE_N            => vram_oe_n_s,			-- : OUT   STD_LOGIC;
         PRAMWE_N            => vram_we_n_s,			-- : OUT   STD_LOGIC;
@@ -201,9 +208,30 @@ begin
 		wait until( rising_edge(clock_s) );
 		wait until( rising_edge(clock_s) );
 
-		wait for 100 us;
+		wait for 1442 us;
 
-		write_p("00", X"00", data_i_s, mode_s, req_s, wrt_s);
+		write_p("01", X"00", data_i_s, mode_s, req_s, wrt_s);
+		wait until( rising_edge(clock_s) );
+		wait until( rising_edge(clock_s) );
+		write_p("01", X"40", data_i_s, mode_s, req_s, wrt_s);
+		wait until( rising_edge(clock_s) );
+		wait until( rising_edge(clock_s) );
+		write_p("00", X"AA", data_i_s, mode_s, req_s, wrt_s);
+		wait until( rising_edge(clock_s) );
+		wait until( rising_edge(clock_s) );
+		for i in 0 to 5 loop
+			wait until( rising_edge(clock_s) );
+		end loop;
+		write_p("00", X"55", data_i_s, mode_s, req_s, wrt_s);
+		wait until( rising_edge(clock_s) );
+		wait until( rising_edge(clock_s) );
+		for i in 0 to 19 loop
+			wait until( rising_edge(clock_s) );
+		end loop;
+		write_p("01", X"00", data_i_s, mode_s, req_s, wrt_s);
+		wait until( rising_edge(clock_s) );
+		wait until( rising_edge(clock_s) );
+		write_p("01", X"40", data_i_s, mode_s, req_s, wrt_s);
 		wait until( rising_edge(clock_s) );
 		wait until( rising_edge(clock_s) );
 		read_p("00",         data_i_s, mode_s, req_s, wrt_s);

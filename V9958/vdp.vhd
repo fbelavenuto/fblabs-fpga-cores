@@ -252,6 +252,9 @@ LIBRARY IEEE;
     USE WORK.VDP_PACKAGE.ALL;
 
 ENTITY VDP IS
+	generic (
+		start_on_g		: boolean		:= false	-- false = VDP starts off, true = VDP start showing video
+	);
     PORT(
         -- VDP CLOCK ... 21.477MHZ
         CLK21M              : IN    STD_LOGIC;
@@ -262,6 +265,7 @@ ENTITY VDP IS
         ADR                 : IN    STD_LOGIC_VECTOR( 15 DOWNTO 0 );
         DBI                 : OUT   STD_LOGIC_VECTOR(  7 DOWNTO 0 );
         DBO                 : IN    STD_LOGIC_VECTOR(  7 DOWNTO 0 );
+        wait_n_o            : out   std_logic;
 
         INT_N               : OUT   STD_LOGIC;
 
@@ -1184,6 +1188,9 @@ BEGIN
     -- VDP REGISTER ACCESS
     -----------------------------------------------------------------------------
     U_VDP_REGISTER: entity work.VDP_REGISTER
+    generic map (
+        start_on_g      => start_on_g
+    )
     PORT MAP(
         RESET                       => RESET                        ,
         CLK21M                      => CLK21M                       ,
@@ -1194,6 +1201,7 @@ BEGIN
         ADR                         => ADR                          ,
         DBI                         => DBI                          ,
         DBO                         => DBO                          ,
+        wait_n_o                    => wait_n_o ,
 
         DOTSTATE                    => DOTSTATE                     ,
 
