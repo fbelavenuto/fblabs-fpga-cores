@@ -81,7 +81,7 @@ entity T80a is
 	generic(
 	  	mode_g		: integer		:= 0;		-- 0 => Z80, 1 => Fast Z80, 2 => 8080, 3 => GB
 	  	iowait_g	: integer		:= 1;		-- 0 => Single I/O cycle, 1 => Std I/O cycle
-		nmos_g		: std_logic		:= '1'		-- 0 => OUT(C),255, 1 => OUT(C),0
+		nmos_g		: boolean		:= true		-- false => OUT(C),255; true => OUT(C),0
 	);
 	port(
 		r800_mode_i : in    std_logic;
@@ -164,7 +164,7 @@ begin
 		end if;
 	end process;
 
-	u0 : T80
+	u0 : entity work.T80
 	generic map(
 		Mode		=> mode_g,
 		IOWait		=> iowait_g,

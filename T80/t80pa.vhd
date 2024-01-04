@@ -62,7 +62,7 @@ use work.T80_Pack.all;
 entity T80pa is
 	generic(
 		mode_g		: integer	:= 0;		-- 0 => Z80, 1 => Fast Z80, 2 => 8080, 3 => GB
-		nmos_g		: std_logic	:= '1'		-- 0 => OUT(C),255, 1 => OUT(C),0
+		nmos_g		: boolean	:= true		-- false => OUT(C),255; true => OUT(C),0
 	);
 	port(
 		r800_mode_i		: in  std_logic			:= '0';
@@ -106,7 +106,7 @@ begin
 	clock_en_s <= clock_en_p_i and not clock_en_pol_s;
 	busak_n_o <= busak_s;
 
-	u0 : T80
+	u0 : entity work.T80
 		generic map(
 			Mode    => mode_g,
 			IOWait  => 1,

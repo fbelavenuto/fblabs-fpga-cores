@@ -128,10 +128,11 @@ begin
 	DO(6) <= IORQ and not Write when TState = "001" else DO_i(6);       -- INP
 	DO(7) <= not IORQ and not Write and IntCycle_n when TState = "001" else DO_i(7);    -- MEMR
 
-	u0 : T80
+	u0 : entity work.T80
 		generic map(
 			Mode => Mode,
-			IOWait => 0)
+			IOWait => 0
+		)
 		port map(
 			CEN => CLKEN,
 			M1_n => open,

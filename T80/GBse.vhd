@@ -112,7 +112,7 @@ architecture rtl of GBse is
 
 begin
 
-	u0 : T80
+	u0 : entity work.T80
 		generic map(
 			Mode      => 3,
 			IOWait    => IOWait,
