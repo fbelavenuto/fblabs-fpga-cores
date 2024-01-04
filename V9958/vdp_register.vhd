@@ -54,6 +54,10 @@
 --  ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 --  POSSIBILITY OF SUCH DAMAGE.
 ------------------------------------------------------------------------------
+--
+--  4th,January,2024 modified by Fabio Belavenuto
+--   - Changed the CPU interface
+--
 --  23rd,March,2008
 --      JP: VDP.VHD から分離 by t.hara
 --
@@ -94,12 +98,11 @@ ENTITY VDP_REGISTER IS
         RESET                       : IN    STD_LOGIC;
         CLK21M                      : IN    STD_LOGIC;
 
-        REQ                         : IN    STD_LOGIC;
-        ACK                         : OUT   STD_LOGIC;
-        WRT                         : IN    STD_LOGIC;
         ADR                         : IN    STD_LOGIC_VECTOR( 15 DOWNTO 0 );
         DBI                         : OUT   STD_LOGIC_VECTOR(  7 DOWNTO 0 );
         DBO                         : IN    STD_LOGIC_VECTOR(  7 DOWNTO 0 );
+        csr_n_i                     : in    std_logic;
+        csw_n_i                     : in    std_logic;
         wait_n_o                    : out   std_logic;
 
         DOTSTATE                    : IN    STD_LOGIC_VECTOR(  1 DOWNTO 0 );
@@ -208,7 +211,9 @@ END VDP_REGISTER;
 
 ARCHITECTURE RTL OF VDP_REGISTER IS
 
-    SIGNAL FF_ACK                   : STD_LOGIC;
+    signal old_csr_n_q              : std_logic;
+    signal old_csw_n_q              : std_logic;
+    signal vram_req_s               : std_logic;
 
     SIGNAL VDPP1IS1STBYTE           : STD_LOGIC;
     SIGNAL VDPP2IS1STBYTE           : STD_LOGIC;
@@ -253,7 +258,6 @@ ARCHITECTURE RTL OF VDP_REGISTER IS
 
 BEGIN
 
-    ACK                     <= FF_ACK;
     SPVDPS0RESETREQ         <= FF_SPVDPS0RESETREQ;
 
     VDPMODEGRAPHIC1         <=  '1' WHEN( ( REG_R0_DISP_MODE & REG_R1_DISP_MODE(0) & REG_R1_DISP_MODE(1) ) = "00000" )ELSE '0';
@@ -276,16 +280,6 @@ BEGIN
 
     VDPMODEISVRAMINTERLEAVE <=  '1' WHEN( (REG_R0_DISP_MODE(3) AND REG_R0_DISP_MODE(1)) = '1' )ELSE
                                 '0';
-
-    ----------------------------------------------------------------------------------------
-    PROCESS( RESET, CLK21M )
-    BEGIN
-        IF( RESET = '1' )THEN
-            FF_ACK <= '0';
-        ELSIF( CLK21M'EVENT AND CLK21M = '1' )THEN
-            FF_ACK <= REQ;
-        END IF;
-    END PROCESS;
 
     ----------------------------------------------------------------------------------------
     PROCESS( RESET, CLK21M )
@@ -383,12 +377,12 @@ BEGIN
     --------------------------------------------------------------------------
     -- PROCESS OF CPU READ REQUEST
     --------------------------------------------------------------------------
-    PROCESS( RESET, CLK21M )
+    dbi_ctrl: PROCESS( RESET, CLK21M )
     BEGIN
         IF( RESET = '1' )THEN
             DBI <= (OTHERS => '0');
         ELSIF( CLK21M'EVENT AND CLK21M = '1' )THEN
-            IF( REQ = '1' AND WRT = '0' )THEN
+            IF csr_n_i = '0' THEN
                 -- READ REQUEST
                 CASE( ADR(1 DOWNTO 0) )IS
                 WHEN "00"       => -- PORT#0 (0x98): READ VRAM
@@ -433,7 +427,7 @@ BEGIN
         IF( RESET = '1' )THEN
             CLR_HSYNC_INT <= '0';
         ELSIF( CLK21M'EVENT AND CLK21M = '1' )THEN
-            IF( REQ = '1' AND WRT = '0' )THEN
+            IF old_csr_n_q = '0' and csr_n_i = '1' THEN
                 -- CASE OF READ REQUEST
                 IF( ADR(1 DOWNTO 0) = "01" AND VDPR15STATUSREGNUM = "0001" )THEN
                     -- CLEAR HSYNC INTERRUPT BY READ S#1
@@ -462,7 +456,7 @@ BEGIN
         IF( RESET = '1' )THEN
             CLR_VSYNC_INT <= '0';
         ELSIF( CLK21M'EVENT AND CLK21M = '1' )THEN
-            IF( REQ = '1' AND WRT = '0' )THEN
+            IF old_csr_n_q = '0' and csr_n_i = '1' THEN
                 -- CASE OF READ REQUEST
                 IF( ADR(1 DOWNTO 0) = "01" AND VDPR15STATUSREGNUM = "0000" )THEN
                     -- CLEAR VSYNC INTERRUPT BY READ S#0
@@ -481,7 +475,7 @@ BEGIN
     --------------------------------------------------------------------------
     -- PROCESS OF CPU WRITE REQUEST
     --------------------------------------------------------------------------
-    PROCESS( RESET, CLK21M, FORCED_V_MODE )
+    cpu_wr_rd: PROCESS( RESET, CLK21M, FORCED_V_MODE )
     BEGIN
         IF( RESET = '1' )THEN
             VDPP1DATA               <= (OTHERS => '0');
@@ -489,7 +483,7 @@ BEGIN
             VDPP2IS1STBYTE          <= '1';
             VDPREGWRPULSE           <= '0';
             VDPREGPTR               <= (OTHERS => '0');
-            VDPVRAMWRREQ            <= '0';
+            vram_req_s              <= '0';
             VDPVRAMRDREQ            <= '0';
             VDPVRAMADDRSETREQ       <= '0';
             VDPVRAMACCESSADDRTMP    <= (OTHERS => '0');
@@ -547,7 +541,10 @@ BEGIN
 			end if;
 
         ELSIF( CLK21M'EVENT AND CLK21M = '1' )THEN
-            IF (REQ = '1' AND WRT = '0') THEN
+            old_csr_n_q <= csr_n_i;
+            old_csw_n_q <= csw_n_i;
+
+            IF old_csr_n_q = '1' and csr_n_i = '0' THEN
                 -- READ REQUEST
                 CASE ADR(1 DOWNTO 0) IS
                 WHEN "00"       => -- PORT#0 (0x98): READ VRAM
@@ -569,18 +566,18 @@ BEGIN
                 WHEN OTHERS => -- PORT#3: NOT SUPPORTED IN READ MODE
                     NULL;
                 END CASE;
-
-            ELSIF (REQ = '1' AND WRT = '1') THEN
+            ELSIF old_csw_n_q = '1' and csw_n_i = '0' THEN
                 -- WRITE REQUEST
                 CASE ADR(1 DOWNTO 0) IS
                     WHEN "00"       => -- PORT#0 (0x98): WRITE VRAM
---                        IF VDPVRAMWRREQ /= VDPVRAMWRACK then
---                            wait_n_s    <= '0';
---                        else
+                        IF vram_req_s /= VDPVRAMWRACK then
+                            old_csw_n_q <= '1';
+                            wait_n_s    <= '0';
+                        else
                             VDPVRAMACCESSDATA <= DBO;
-                            VDPVRAMWRREQ <= NOT VDPVRAMWRACK;
+                            vram_req_s <= NOT VDPVRAMWRACK;
                             wait_n_s    <= '1';
---                        end if;
+                        end if;
 
                     WHEN "01"       => -- PORT#1 (0x99): REGISTER WRITE OR VRAM ADDR SETUP
                         IF(VDPP1IS1STBYTE = '1') THEN
@@ -731,6 +728,7 @@ BEGIN
         END IF;
     END PROCESS;
 
-    wait_n_o    <= wait_n_s;
+    wait_n_o        <= wait_n_s;
+    VDPVRAMWRREQ    <= vram_req_s;
 
 END RTL;

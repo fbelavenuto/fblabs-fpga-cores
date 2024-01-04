@@ -5,9 +5,8 @@ add wave -noupdate /tb/clock_s
 add wave -noupdate /tb/mode_s
 add wave -noupdate -radix hexadecimal /tb/data_i_s
 add wave -noupdate -radix hexadecimal /tb/data_o_s
-add wave -noupdate /tb/req_s
-add wave -noupdate /tb/ack_s
-add wave -noupdate /tb/wrt_s
+add wave -noupdate /tb/csr_n_s
+add wave -noupdate /tb/csw_n_s
 add wave -noupdate /tb/wait_n_s
 add wave -noupdate -divider Outs
 add wave -noupdate -radix hexadecimal /tb/rgb_b_s
@@ -41,7 +40,7 @@ add wave -noupdate /tb/u_target/PREWINDOW_X
 add wave -noupdate /tb/u_target/PREWINDOW_Y_SP
 add wave -noupdate /tb/u_target/SPVRAMACCESSING
 TreeUpdate [SetDefaultTree]
-WaveRestoreCursors {{Cursor 1} {1443457 ns} 0}
+WaveRestoreCursors {{Cursor 1} {1724050 ns} 0}
 quietly wave cursor active 1
 configure wave -namecolwidth 210
 configure wave -valuecolwidth 49

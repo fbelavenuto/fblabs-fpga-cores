@@ -73,6 +73,10 @@
 -------------------------------------------------------------------------------
 -- Revision History
 --
+-- 4th,January,2024 modified by Fabio Belavenuto
+--  - Changed the CPU interface
+--
+--
 -- 3rd,June,2018 modified by KdL
 --  - Improved the VGA up-scan converter
 --
@@ -259,12 +263,11 @@ ENTITY VDP IS
         -- VDP CLOCK ... 21.477MHZ
         CLK21M              : IN    STD_LOGIC;
         RESET               : IN    STD_LOGIC;
-        REQ                 : IN    STD_LOGIC;
-        ACK                 : OUT   STD_LOGIC;
-        WRT                 : IN    STD_LOGIC;
         ADR                 : IN    STD_LOGIC_VECTOR( 15 DOWNTO 0 );
         DBI                 : OUT   STD_LOGIC_VECTOR(  7 DOWNTO 0 );
         DBO                 : IN    STD_LOGIC_VECTOR(  7 DOWNTO 0 );
+        csr_n_i             : in    std_logic;
+        csw_n_i             : in    std_logic;
         wait_n_o            : out   std_logic;
 
         INT_N               : OUT   STD_LOGIC;
@@ -1195,12 +1198,11 @@ BEGIN
         RESET                       => RESET                        ,
         CLK21M                      => CLK21M                       ,
 
-        REQ                         => REQ                          ,
-        ACK                         => ACK                          ,
-        WRT                         => WRT                          ,
         ADR                         => ADR                          ,
         DBI                         => DBI                          ,
         DBO                         => DBO                          ,
+        csr_n_i                     => csr_n_i                      ,
+        csw_n_i                     => csw_n_i                      ,
         wait_n_o                    => wait_n_o ,
 
         DOTSTATE                    => DOTSTATE                     ,
