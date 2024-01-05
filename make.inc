@@ -4,8 +4,9 @@ BARE_SRCS = $(notdir $(SRCS))
 BARE_OBJS = $(patsubst %.vhd,%,$(BARE_SRCS))
 OBJS = $(addprefix work/, $(BARE_OBJS))
 ROOT_DIR := $(dir $(realpath $(lastword $(MAKEFILE_LIST))))
+TB ?= tb
 
-.PHONY: all clean simulation
+.PHONY: clean simulation
 
 all: simulation
 
@@ -13,7 +14,7 @@ clean:
 	vdel -all work
 	$(RM) transcript *.wlf
 
-simulation: work $(OBJS) work/tb
+simulation: work $(OBJS) work/$(TB)
 	vsim -t ns tb -do $(ROOT_DIR)/all.do
 
 work:

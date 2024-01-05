@@ -8,5 +8,6 @@ SRCS = ../vdp_package.vhd ../ram.vhd ../vdp_colordec.vhd ../vdp_command.vhd \
 	   ../vdp_ntsc_pal.vhd ../vdp_register.vhd ../vdp_spinforam.vhd \
 	   ../vdp_sprite.vhd ../vdp_ssg.vhd ../vdp_text12.vhd \
 	   ../vdp_vga.vhd ../vdp_wait_control.vhd ../vdp.vhd
+TB = tb2
 
 include ../../make.inc
