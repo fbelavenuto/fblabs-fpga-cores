@@ -42,53 +42,20 @@ end tb;
 
 architecture testbench of tb is
 
-	-- test target
-	component T65
-	port (
-		Mode    : in  std_logic_vector(1 downto 0); -- "00" => 6502, "01" => 65C02, "10" => 65C816
-		BCD_en  : in  std_logic := '1';             -- '0' => 2A03/2A07, '1' => others
-		
-		Res_n   : in  std_logic;
-		Clk     : in  std_logic;
-		Enable  : in  std_logic := '1';
-		
-		A       : out std_logic_vector(23 downto 0);
-		DI      : in  std_logic_vector(7 downto 0);
-		DO      : out std_logic_vector(7 downto 0);
-		
-		Rdy     : in  std_logic := '1';
-		Abort_n : in  std_logic := '1';
-		IRQ_n   : in  std_logic := '1';
-		NMI_n   : in  std_logic := '1';
-		SO_n    : in  std_logic := '1';
-		R_W_n   : out std_logic;
-		Sync    : out std_logic;
-		EF      : out std_logic;
-		MF      : out std_logic;
-		XF      : out std_logic;
-		ML_n    : out std_logic;
-		VP_n    : out std_logic;
-		VDA     : out std_logic;
-		VPA     : out std_logic;
-		
-		DEBUG   : out T_t65_dbg;
-		NMI_ack : out std_logic
-	);
-	end component;
-
-	signal tb_end				: std_logic := '0';
-	signal clock_s				: std_logic;
-	signal reset_n_s			: std_logic;
-	signal cpu_addr_s			: std_logic_vector(23 downto 0);
+	signal tb_end			: std_logic := '0';
+	signal clock_s			: std_logic;
+	signal reset_n_s		: std_logic;
+	signal cpu_addr_s		: std_logic_vector(23 downto 0);
 	signal cpu_di_s			: std_logic_vector( 7 downto 0);
 	signal cpu_do_s			: std_logic_vector( 7 downto 0);
-	signal cpu_we_n_s			: std_logic;
-	signal sync_s				: std_logic;
-	
+	signal cpu_we_n_s		: std_logic;
+	signal sync_s			: std_logic;
+	signal texto			: string (1 to 12)				:= "            ";
+
 begin
 
 	--  instance
-	u_target: T65
+	u_target: entity work.T65
 	port map (
 		Mode    => "00",
 		BCD_en  => '1',
@@ -123,7 +90,7 @@ begin
 	-- ----------------------------------------------------- --
 	--  clock generator                                      --
 	-- ----------------------------------------------------- --
-	process
+	clock_gen: process
 	begin
 		if tb_end = '1' then
 			wait;
@@ -137,17 +104,18 @@ begin
 	--
 	--
 	--
-	process (cpu_addr_s, cpu_we_n_s)
+	cpudi: process (cpu_addr_s, cpu_we_n_s, sync_s)
 	begin
 		if cpu_we_n_s = '1' then
 			case cpu_addr_s(15 downto 0) is
-				when X"0000" => cpu_di_s <= X"A9";		-- LDA #00
-				when X"0001" => cpu_di_s <= X"00";		-- 
-				when X"0002" => cpu_di_s <= X"8D";		-- STA $2000
+				--                                                                123456789012
+				when X"0000" => cpu_di_s <= X"A9"; if sync_s = '1' then texto <= "LDA #5A     "; end if;
+				when X"0001" => cpu_di_s <= X"5A";		-- 
+				when X"0002" => cpu_di_s <= X"8D"; if sync_s = '1' then texto <= "STA $2000   "; end if;
 				when X"0003" => cpu_di_s <= X"00";		-- 
 				when X"0004" => cpu_di_s <= X"20";		-- 
-				when X"0005" => cpu_di_s <= X"C8";		-- INY
-				when X"0006" => cpu_di_s <= X"EA";		-- NOP
+				when X"0005" => cpu_di_s <= X"C8"; if sync_s = '1' then texto <= "INY         "; end if;
+				when X"0006" => cpu_di_s <= X"EA"; if sync_s = '1' then texto <= "NOP         "; end if;
 				when X"0007" => cpu_di_s <= X"EA";		-- 
 				when X"0008" => cpu_di_s <= X"EA";		-- 
 				when X"0009" => cpu_di_s <= X"EA";		-- 
@@ -172,7 +140,7 @@ begin
 	-- ----------------------------------------------------- --
 	--  test bench                                           --
 	-- ----------------------------------------------------- --
-	process
+	testbench: process
 	begin
 		-- init
 

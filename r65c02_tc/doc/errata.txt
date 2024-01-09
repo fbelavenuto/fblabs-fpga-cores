@@ -1,0 +1,10 @@
+v1.52 2018/09/10
+FUNCTIONALITY:
+ no errata reported/opened
+
+TIMING:
+ no errata reported/opened
+
+SIGNALING:
+ no errata reported/opened
+
