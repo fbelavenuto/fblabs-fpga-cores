@@ -35,7 +35,6 @@
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
-use work.T65_Pack.all;
 
 entity tb is
 end tb;
@@ -44,48 +43,39 @@ architecture testbench of tb is
 
 	signal tb_end			: std_logic := '0';
 	signal clock_s			: std_logic;
-	signal clock_en_s		: std_logic;
-	signal reset_n_s		: std_logic;
-	signal cpu_addr_s		: std_logic_vector(23 downto 0);
+	signal reset_s			: std_logic;
+	signal cpu_addr_s		: std_logic_vector(15 downto 0);
 	signal cpu_di_s			: std_logic_vector( 7 downto 0);
 	signal cpu_do_s			: std_logic_vector( 7 downto 0);
-	signal cpu_we_n_s		: std_logic;
-	signal sync_s			: std_logic;
+	signal cpu_we_s			: std_logic;
 	signal texto			: string (1 to 12)				:= "            ";
 
 begin
 
 	--  instance
-	u_target: entity work.T65
+	u_target: entity work.cpu6502
+	generic map (
+		pipelineOpcode		=> false,
+		pipelineAluMux		=> false,
+		pipelineAluOut		=> false
+	)
 	port map (
-		Mode    => "00",
-		BCD_en  => '1',
-		
-		Res_n   => reset_n_s,
-		Clk     => clock_s,
-		Enable  => clock_en_s,
-		
-		A       => cpu_addr_s,
-		DI      => cpu_di_s,
-		DO      => cpu_do_s,
-		
-		Rdy     => '1',
-		Abort_n => '1',
-		IRQ_n   => '1',
-		NMI_n   => '1',
-		SO_n    => '1',
-		R_W_n   => cpu_we_n_s,
-		Sync    => sync_s,
-		EF      => open,
-		MF      => open,
-		XF      => open,
-		ML_n    => open,
-		VP_n    => open,
-		VDA     => open,
-		VPA     => open,
-		
-		DEBUG   => open,
-		NMI_ack => open
+		clk					=> clock_s,
+		enable				=> '1',
+		reset				=> reset_s,
+		nmi_n				=> '1',
+		irq_n				=> '1',
+		so_n				=> '1',
+		di					=> unsigned(cpu_di_s),
+		std_logic_vector(do)		=> cpu_do_s,
+		std_logic_vector(addr)		=> cpu_addr_s,
+		we					=> cpu_we_s,
+		debugOpcode			=> open,
+		debugPc				=> open,
+		debugA				=> open,
+		debugX				=> open,
+		debugY				=> open,
+		debugS				=> open
 	);
 
 	-- ----------------------------------------------------- --
@@ -97,40 +87,26 @@ begin
 			wait;
 		end if;
 		clock_s <= '0';
-		wait for 100 ns;		-- 10 MHz
+		wait for 1000 ns;		-- 1 MHz
 		clock_s <= '1';
-		wait for 100 ns;
-	end process;
-
-	clock_en: process(clock_s)
-		variable cnt_q	: unsigned(3 downto 0)	:= X"9";
-	begin
-		if rising_edge(clock_s) then
-			clock_en_s	<= '0';
-			if cnt_q = 0 then
-				clock_en_s <= '1';
-				cnt_q := X"9";
-			else
-				cnt_q := cnt_q - 1;
-			end if;
-		end if;
+		wait for 1000 ns;
 	end process;
 
 	--
 	--
 	--
-	cpudi: process (cpu_addr_s, cpu_we_n_s, sync_s)
+	cpudi: process (cpu_addr_s, cpu_we_s)
 	begin
-		if cpu_we_n_s = '1' then
+		if cpu_we_s = '0' then
 			case cpu_addr_s(15 downto 0) is
-				--                                                                123456789012
-				when X"0000" => cpu_di_s <= X"A9"; if sync_s = '1' then texto <= "LDA #5A     "; end if;
+				--                                                        123456789012
+				when X"0000" => cpu_di_s <= X"A9"; if true then texto <= "LDA #5A     "; end if;
 				when X"0001" => cpu_di_s <= X"5A";		-- 
-				when X"0002" => cpu_di_s <= X"8D"; if sync_s = '1' then texto <= "STA $2000   "; end if;
+				when X"0002" => cpu_di_s <= X"8D"; if true then texto <= "STA $2000   "; end if;
 				when X"0003" => cpu_di_s <= X"00";		-- 
 				when X"0004" => cpu_di_s <= X"20";		-- 
-				when X"0005" => cpu_di_s <= X"C8"; if sync_s = '1' then texto <= "INY         "; end if;
-				when X"0006" => cpu_di_s <= X"EA"; if sync_s = '1' then texto <= "NOP         "; end if;
+				when X"0005" => cpu_di_s <= X"C8"; if true then texto <= "INY         "; end if;
+				when X"0006" => cpu_di_s <= X"EA"; if true then texto <= "NOP         "; end if;
 				when X"0007" => cpu_di_s <= X"EA";		-- 
 				when X"0008" => cpu_di_s <= X"EA";		-- 
 				when X"0009" => cpu_di_s <= X"EA";		-- 
@@ -160,14 +136,14 @@ begin
 		-- init
 
 		-- reset
-		reset_n_s	<= '0';
-		wait until( rising_edge(clock_en_s) );
-		wait until( rising_edge(clock_en_s) );
-		reset_n_s	<= '1';
-		wait until( rising_edge(clock_en_s) );
+		reset_s	<= '1';
+		wait until( rising_edge(clock_s) );
+		wait until( rising_edge(clock_s) );
+		reset_s	<= '0';
+		wait until( rising_edge(clock_s) );
 
 		for i in 0 to 19 loop
-			wait until( rising_edge(clock_en_s) );
+			wait until( rising_edge(clock_s) );
 		end loop;
 
 		-- wait
