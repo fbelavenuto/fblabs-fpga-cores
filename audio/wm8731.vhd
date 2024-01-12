@@ -36,7 +36,7 @@
 --
 -------------------------------------------------------------------------------
 
--- Abstracao do audio para chip WM8731
+-- WM8731 chip control
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -47,20 +47,21 @@ use ieee.numeric_std.all;
 entity WM8731 is
 	port (
 		clock_i			: in    std_logic;							-- Clock 24 MHz
-		reset_i			: in    std_logic;							-- Reset geral
-		k7_audio_o		: out   std_logic;
-		audio_l_i		: in    signed(15 downto 0);
-		audio_r_i		: in    signed(15 downto 0);
+		reset_i			: in    std_logic;
+		audio_l_i		: in    std_logic_vector(15 downto 0);
+		audio_r_i		: in    std_logic_vector(15 downto 0);
+		audio_l_o		: out   std_logic_vector(15 downto 0);
+		audio_r_o		: out   std_logic_vector(15 downto 0);
 
-		i2s_xck_o		: out   std_logic;							-- Ligar nos pinos do TOP
+		i2s_xck_o		: out   std_logic;
 		i2s_bclk_o		: out   std_logic;
 		i2s_adclrck_o	: out   std_logic;
 		i2s_adcdat_i	: in    std_logic;
 		i2s_daclrck_o	: out   std_logic;
 		i2s_dacdat_o	: out   std_logic;
 		
-		i2c_sda_io		: inout std_logic;							-- Ligar no pino I2C SDA
-		i2c_scl_io		: inout std_logic								-- Ligar no pino I2C SCL
+		i2c_sda_io		: inout std_logic;
+		i2c_scl_io		: inout std_logic
 	);
 end entity;
 
@@ -75,17 +76,16 @@ end entity;
 architecture Behavior of WM8731 is
 
 	signal pcm_lrclk_s		: std_logic;
-	signal ear_r				: std_logic;
-	signal pcm_inl_s			: std_logic_vector(15 downto 0);
-	signal pcm_l_s				: std_logic_vector(15 downto 0);
-	signal pcm_r_s				: std_logic_vector(15 downto 0);
+	signal ear_r			: std_logic;
+	signal pcm_l_s			: std_logic_vector(15 downto 0);
+	signal pcm_r_s			: std_logic_vector(15 downto 0);
 
 begin
 
 	--
 	i2c: entity work.i2c_loader
 	generic map (
-		device_address	=> 16#1a#,		-- Address of slave to be loaded
+		device_address	=> 16#1a#,			-- Address of slave to be loaded
 		num_retries		=> 0,				-- Number of retries to allow before stopping
 		-- Length of clock divider in bits.  Resulting bus frequency is
 		-- CLK/2^(log2_divider + 2)
@@ -103,20 +103,20 @@ begin
 	--
 	i2s: entity work.i2s_intf
 	generic map (
-		mclk_rate	=> 12000000,
-		sample_rate	=> 48000,
-		preamble		=>  1, -- I2S
-		word_length	=> 16
+		mclk_rate		=> 12000000,
+		sample_rate		=> 48000,
+		preamble		=> 1, -- I2S
+		word_length		=> 16
 	)
 	port map (
 		-- 2x MCLK in (e.g. 24 MHz for WM8731 USB mode)
 		clock_i			=> clock_i,
 		reset_i			=> reset_i,
 		-- Parallel IO
-		pcm_inl_o		=> pcm_inl_s,
-		pcm_inr_o		=> open,
-		pcm_outl_i		=> pcm_l_s,
-		pcm_outr_i		=> pcm_r_s,
+		pcm_inl_o		=> audio_l_o,
+		pcm_inr_o		=> audio_r_o,
+		pcm_outl_i		=> audio_l_i,
+		pcm_outr_i		=> audio_r_i,
 		-- Codec interface (right justified mode)
 		-- MCLK is generated at half of the CLK input
 		i2s_mclk_o		=> i2s_xck_o,
@@ -140,25 +140,5 @@ begin
 	);
 	i2s_adclrck_o <= pcm_lrclk_s;
 	i2s_daclrck_o <= pcm_lrclk_s;
-	 
-	pcm_l_s 	<= std_logic_vector(audio_l_i);
-	pcm_r_s 	<= std_logic_vector(audio_r_i);
-
-	k7_audio_o <= ear_r;
-
-	-- Hysteresis
-	process (clock_i)
-		variable in_val_v : integer;
-	begin		
-		if rising_edge(clock_i) then
-			in_val_v := to_integer(signed(pcm_inl_s));
-			if in_val_v < -15 then
-				ear_r <= '0';
-			elsif in_val_v > 15 then
-				ear_r <= '1';
-			end if;
-		end if;
-	end process;
-
 
 end architecture;
