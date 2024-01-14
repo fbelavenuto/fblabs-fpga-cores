@@ -88,7 +88,7 @@ architecture rtl of i2c_loader is
 	type regs is array(0 to 21) of std_logic_vector(7 downto 0);
 	constant init_regs : regs := (
 		X"00", X"00",			-- dummy
-		X"00", X"08",			-- Left line in, unmute, ?dB -- 0 0 00 10111
+		X"00", X"08",			-- Left line in, unmute, 0dB -- 0 0 00 10111
 		X"02", X"80",			-- Right line in, mute -- 0 1 00 00000
 		X"04", X"79",			-- Left headphone out, 0dB
 		X"06", X"79",			-- Right headphone out, 0dB

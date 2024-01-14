@@ -48,10 +48,10 @@ entity WM8731 is
 	port (
 		clock_i			: in    std_logic;							-- Clock 24 MHz
 		reset_i			: in    std_logic;
-		audio_l_i		: in    std_logic_vector(15 downto 0);
-		audio_r_i		: in    std_logic_vector(15 downto 0);
-		audio_l_o		: out   std_logic_vector(15 downto 0);
-		audio_r_o		: out   std_logic_vector(15 downto 0);
+		audio_l_i		: in    signed(15 downto 0);
+		audio_r_i		: in    signed(15 downto 0);
+		audio_l_o		: out   signed(15 downto 0);
+		audio_r_o		: out   signed(15 downto 0);
 
 		i2s_xck_o		: out   std_logic;
 		i2s_bclk_o		: out   std_logic;

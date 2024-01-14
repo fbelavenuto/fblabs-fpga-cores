@@ -32,8 +32,9 @@
 
 library ieee;
 use ieee.std_logic_1164.all;
-use ieee.std_logic_arith.all;
 use ieee.std_logic_unsigned.all;
+use ieee.std_logic_signed.all;
+use ieee.numeric_std.all;
 
 entity i2s_intf is
 	generic (
@@ -48,10 +49,10 @@ entity i2s_intf is
 		reset_i			: in  std_logic;
 
 		-- Parallel IO
-		pcm_inl_o		: out std_logic_vector(word_length - 1 downto 0);
-		pcm_inr_o		: out std_logic_vector(word_length - 1 downto 0);
-		pcm_outl_i		: in  std_logic_vector(word_length - 1 downto 0);
-		pcm_outr_i		: in  std_logic_vector(word_length - 1 downto 0);
+		pcm_inl_o		: out signed(word_length - 1 downto 0);
+		pcm_inr_o		: out signed(word_length - 1 downto 0);
+		pcm_outl_i		: in  signed(word_length - 1 downto 0);
+		pcm_outr_i		: in  signed(word_length - 1 downto 0);
 
 		-- Codec interface (right justified mode)
 		-- MCLK is generated at half of the CLK input
@@ -146,15 +147,15 @@ begin
 				if lrclk_r = '0' then
 					-- Previous channel input is LEFT.  This is available in the
 					-- shift register at the end of a cycle, right justified
-					pcm_inl_o	<= shiftreg(word_length - 1 downto 0);
+					pcm_inl_o	<= signed(shiftreg(word_length - 1 downto 0));
 					-- Next channel to output is RIGHT.  Load this into the
 					-- shift register at the start of a cycle, left justified
-					shiftreg(word_length downto 1) <= pcm_outr_i;
+					shiftreg(word_length downto 1) <= std_logic_vector(pcm_outr_i);
 				else
 					-- Previous channel input is RIGHT
-					pcm_inr_o	<= shiftreg(word_length - 1 downto 0);
+					pcm_inr_o	<= signed(shiftreg(word_length - 1 downto 0));
 					-- Next channel is LEFT
-					shiftreg(word_length downto 1) <= pcm_outl_i;
+					shiftreg(word_length downto 1) <= std_logic_vector(pcm_outl_i);
 				end if;
 			else
 				-- Decrement the LRCLK counter
