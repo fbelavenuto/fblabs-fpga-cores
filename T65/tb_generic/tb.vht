@@ -46,7 +46,8 @@ architecture testbench of tb is
 	signal clock_s			: std_logic;
 	signal clock_en_s		: std_logic;
 	signal reset_n_s		: std_logic;
-	signal cpu_addr_s		: std_logic_vector(23 downto 0);
+	signal cpu_a_s			: std_logic_vector(23 downto 0);
+	signal cpu_addr_s		: std_logic_vector(15 downto 0);
 	signal cpu_di_s			: std_logic_vector( 7 downto 0);
 	signal cpu_do_s			: std_logic_vector( 7 downto 0);
 	signal cpu_we_n_s		: std_logic;
@@ -65,7 +66,7 @@ begin
 		Clk     => clock_s,
 		Enable  => clock_en_s,
 		
-		A       => cpu_addr_s,
+		A       => cpu_a_s,
 		DI      => cpu_di_s,
 		DO      => cpu_do_s,
 		
@@ -87,6 +88,8 @@ begin
 		DEBUG   => open,
 		NMI_ack => open
 	);
+
+	cpu_addr_s	<= cpu_a_s(15 downto 0);
 
 	-- ----------------------------------------------------- --
 	--  clock generator                                      --
@@ -122,7 +125,7 @@ begin
 	cpudi: process (cpu_addr_s, cpu_we_n_s, sync_s)
 	begin
 		if cpu_we_n_s = '1' then
-			case cpu_addr_s(15 downto 0) is
+			case cpu_addr_s is
 				--                                                                123456789012
 				when X"0000" => cpu_di_s <= X"A9"; if sync_s = '1' then texto <= "LDA #5A     "; end if;
 				when X"0001" => cpu_di_s <= X"5A";		-- 
