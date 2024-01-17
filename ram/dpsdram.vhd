@@ -41,7 +41,7 @@ use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 use ieee.numeric_std.all;
 
-entity ssdram is
+entity dpsdram is
 	generic (
 		freq_g			: integer	:= 100;
 		rfsh_cycles_g	: integer	:= 4096;
@@ -81,7 +81,7 @@ entity ssdram is
 	);
 end entity;
 
-architecture Behavior of ssdram is
+architecture behavior of dpsdram is
 
 	constant SdrCmd_de_c	: std_logic_vector(3 downto 0) := "1111"; -- deselect
 	constant SdrCmd_xx_c	: std_logic_vector(3 downto 0) := "0111"; -- no operation
