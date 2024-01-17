@@ -1,6 +1,6 @@
 -------------------------------------------------------------------------------
 --
--- Copyright (c) 2016, Fabio Belavenuto (belavenuto@gmail.com)
+-- Copyright (c) 2024, Fabio Belavenuto (belavenuto@gmail.com)
 --
 -- All rights reserved
 --
@@ -40,7 +40,6 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.std_logic_unsigned.all;
 use ieee.numeric_std.all;
-use std.textio.all;
 
 entity tb is
 end tb;
@@ -50,35 +49,38 @@ architecture testbench of tb is
 	signal tb_end		: std_logic;
 	signal clock_s		: std_logic;
 	signal reset_s		: std_logic;
-	signal pcm_l_s		: std_logic_vector(15 downto 0);
-	signal pcm_r_s		: std_logic_vector(15 downto 0);
+	signal pcm_li_s		: signed(15 downto 0);
+	signal pcm_ri_s		: signed(15 downto 0);
+	signal pcm_lo_s		: signed(15 downto 0);
+	signal pcm_ro_s		: signed(15 downto 0);
 	signal i2s_mclk_s	: std_logic;
 	signal i2s_lrclk_s	: std_logic;
 	signal i2s_bclk_s	: std_logic;
-	signal i2s_d_s		: std_logic;
-
---	constant	mclk_freq_c		: integer := 12288000;
-	constant	clk_period_c	: time := 40.69 ns;	-- 24.576
+	signal i2s_di_s		: std_logic;
+	signal i2s_do_s		: std_logic;
 
 begin
 
 	--  instance
-	u_target: entity work.i2s_transmitter
+	u_target: entity work.i2s_intf
 	generic map (
-		mclk_rate		=> 12288000,
-		sample_rate		=> 96000,		-- 96000 * 16 * 2 = 3072000 * 2 => (minimum bclk = 6144000)
-		preamble		=> 0,
+		mclk_rate		=> 12000000,
+		sample_rate		=> 48000,
+		preamble		=> 1,
 		word_length		=> 16
 	)
 	port map(
 		clock_i			=> clock_s,
 		reset_i			=> reset_s,
-		pcm_l_i			=> pcm_l_s,
-		pcm_r_i			=> pcm_r_s,
+		pcm_inl_o		=> pcm_lo_s,
+		pcm_inr_o		=> pcm_ro_s,
+		pcm_outl_i		=> pcm_li_s,
+		pcm_outr_i		=> pcm_ri_s,
 		i2s_mclk_o		=> i2s_mclk_s,
 		i2s_lrclk_o		=> i2s_lrclk_s,
 		i2s_bclk_o		=> i2s_bclk_s,
-		i2s_d_o			=> i2s_d_s
+		i2s_d_o			=> i2s_do_s,
+		i2s_d_i			=> i2s_di_s
 	);
 
 	-- ----------------------------------------------------- --
@@ -90,9 +92,20 @@ begin
 			wait;
 		end if;
 		clock_s <= '0';
-		wait for clk_period_c/2;
+		wait for 25 ns;
 		clock_s <= '1';
-		wait for clk_period_c/2;
+		wait for 25 ns;
+	end process;
+
+	datain: process
+	begin
+		if tb_end = '1' then
+			wait;
+		end if;
+		i2s_di_s	<= '0';
+		wait for 211 ns;
+		i2s_di_s	<= '1';
+		wait for 237 ns;
 	end process;
 
 	-- ----------------------------------------------------- --
@@ -101,8 +114,8 @@ begin
 	testbench: process
 	begin
 		-- init
-		pcm_l_s <= "1100110011110011";
-		pcm_r_s <= "0110011001100110";
+		pcm_li_s <= "1100110011110011";
+		pcm_ri_s <= "0110011001100110";
 
 		-- reset
 		reset_s	<= '1';
