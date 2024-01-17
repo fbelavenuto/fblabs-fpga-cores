@@ -638,7 +638,7 @@ architecture fast of cpu6502 is
 	signal A: unsigned(7 downto 0); -- Accumulator
 	signal X: unsigned(7 downto 0); -- Index X
 	signal Y: unsigned(7 downto 0); -- Index Y
-	signal S: unsigned(7 downto 0); -- stack pointer
+	signal S: unsigned(7 downto 0)	:= (others => '1'); -- stack pointer
 
 -- Status register
 	signal C: std_logic; -- Carry
