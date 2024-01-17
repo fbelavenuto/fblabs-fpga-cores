@@ -49,27 +49,27 @@ entity ssdram is
 		addr_width_g	: integer	:= 25						-- 25 = 32MB, 23 = 8MB
 	);
 	port (
-		clock_i		: in    std_logic;
-		reset_i		: in    std_logic;
-		refresh_i	: in    std_logic									:= '1';
+		clock_i			: in    std_logic;
+		reset_i			: in    std_logic;
+		refresh_i		: in    std_logic									:= '1';
 		-- Static RAM bus
-		addr_i		: in    std_logic_vector(addr_width_g-1 downto 0);
-		data_i		: in    std_logic_vector( 7 downto 0);
-		data_o		: out   std_logic_vector( 7 downto 0);
-		cs_n_i		: in    std_logic;
-		oe_n_i		: in    std_logic;
-		we_n_i		: in    std_logic;
+		addr_i			: in    std_logic_vector(addr_width_g-1 downto 0);
+		data_i			: in    std_logic_vector( 7 downto 0);
+		data_o			: out   std_logic_vector( 7 downto 0);
+		cs_n_i			: in    std_logic;
+		oe_n_i			: in    std_logic;
+		we_n_i			: in    std_logic;
 		-- SD-RAM ports
-		mem_cke_o	: out   std_logic;
-		mem_cs_n_o	: out   std_logic;
-		mem_ras_n_o	: out   std_logic;
-		mem_cas_n_o	: out   std_logic;
-		mem_we_n_o	: out   std_logic;
-		mem_udq_o	: out   std_logic;
-		mem_ldq_o	: out   std_logic;
-		mem_ba_o	: out   std_logic_vector( 1 downto 0);
-		mem_addr_o	: out   std_logic_vector(addr_width_g/2 downto 0);
-		mem_data_io	: inout std_logic_vector(15 downto 0)
+		mem_cke_o		: out   std_logic;
+		mem_cs_n_o		: out   std_logic;
+		mem_ras_n_o		: out   std_logic;
+		mem_cas_n_o		: out   std_logic;
+		mem_we_n_o		: out   std_logic;
+		mem_udq_o		: out   std_logic;
+		mem_ldq_o		: out   std_logic;
+		mem_ba_o		: out   std_logic_vector( 1 downto 0);
+		mem_addr_o		: out   std_logic_vector(addr_width_g/2 downto 0);
+		mem_data_io		: inout std_logic_vector(15 downto 0)
 	);
 end entity;
 
