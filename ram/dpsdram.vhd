@@ -123,12 +123,14 @@ begin
 		variable access2_v	: std_logic;
 	begin
 		if reset_i = '1' then
-			data_o			<= (others => '1');
+			p1_data_o		<= (others => '1');
+			p2_data_o		<= (others => '1');
 			ram_we1_n_s		<= '1';
 			ram_we2_n_s		<= '1';
 			ram_req1_s		<= '0';
 			ram_req2_s		<= '0';
-			pcs_v			:= "11";
+			pcs1_v			:= "11";
+			pcs2_v			:= "11";
 		elsif rising_edge(clock_i) then
 			if ram_req1_s = '1' and ram_ack1_s = '1' then
 				if ram_we1_n_s = '1' then
@@ -308,7 +310,11 @@ begin
 						SdrAdr_s(addr_width_g/2-4 downto 0)	<= SdrAddress_v(addr_width_g/2-3 downto 1);		-- Col
 						SdrUdq_s							<= not SdrAddress_v(0);
 						SdrLdq_s							<=     SdrAddress_v(0);
-						SdrDat_s							<= ram_din_s & ram_din_s;
+						if port_v = '0' then
+							SdrDat_s						<= ram_din1_s & ram_din1_s;
+						else
+							SdrDat_s						<= ram_din2_s & ram_din2_s;
+						end if;
 						SdrRoutineSeq_v 		:= SdrRoutineSeq_v + 1;
 					elsif SdrRoutineSeq_v = X"03" then
 						if port_v = '0' then
